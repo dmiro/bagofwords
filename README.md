@@ -4,4 +4,4 @@ A python module that allows you to create and manage a collection of occurrence 
 
 ## License
 
-MIT License, see [LICENSE](https://github.com/dmiro/bagofwords/LICENSE)
+MIT License, see [LICENSE](https://github.com/dmiro/bagofwords/blob/master/LICENSE)
