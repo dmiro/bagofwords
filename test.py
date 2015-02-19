@@ -61,23 +61,48 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(self.bow.freq('David'), 1)
         self.assertEqual(dict(self.bow), {u'Álex':1, 'David':1})
         
-    def test_join(self):
+    def test_join_add(self):
         a = bow.BagOfWords()
         b = bow.BagOfWords()
         c = bow.BagOfWords()
         a.add(['car', 'chair', 'chicken'])
         b.add(['chicken', 'chicken', 'eye', 'ugly'])
         c.add('plane')
+        self.assertEqual(dict(a + b + c), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
+        self.assertEqual(dict(c + b + a), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
+        self.assertEqual(dict(b + c + a), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
         total = a + b + c
-        self.assertEqual(dict(total), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
-        total.delete(['chicken', 'chicken','car'])
-        self.assertEqual(dict(total), {'chair': 1, 'eye': 1, 'chicken': 1, 'plane': 1, 'ugly': 1})
-        total.clear()
-        total = total + ['car', 'chair', 'chicken'] + ['chicken', 'chicken', 'eye']
+        total = 'ugly' + total
+        self.assertEqual(dict(total), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 2})
+        total = a + b + c
         total = 'ugly' + total
         total = total + 'plane'
-        self.assertEqual(dict(total), {'eye': 1, 'car': 1, 'ugly': 1, 'plane': 1, 'chair': 1, 'chicken': 3})
-              
+        self.assertEqual(dict(total), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 2, 'ugly': 2})  
+        total = a + b + c
+        total = total + ['car', 'chair', 'chicken'] + ['chicken', 'chicken', 'eye']
+        self.assertEqual(dict(total), {'car': 2, 'chair': 2, 'eye': 2, 'chicken': 6, 'plane': 1, 'ugly': 1})
+
+    def test_join_sub(self):
+        a = bow.BagOfWords()
+        b = bow.BagOfWords()
+        c = bow.BagOfWords()
+        a.add(['car', 'chair', 'chicken'])
+        b.add(['chicken', 'chicken', 'eye', 'ugly'])
+        c.add('plane')
+        self.assertEqual(dict(a - b - c), {'car': 1, 'chair': 1})
+        self.assertEqual(dict(c - b - a), {'plane': 1})
+        self.assertEqual(dict(b - c - a), {'chicken':1, 'eye':1, 'ugly':1})
+        total = b - c - a 
+        total = 'eye' - total
+        self.assertEqual(dict(total), {'chicken':1, 'ugly':1})
+        total = b - c - a 
+        total = 'eye' - total
+        total = total - 'eye'
+        self.assertEqual(dict(total), {'chicken':1, 'ugly':1})
+        total = b - c - a 
+        total = total - ['chicken', 'ugly']
+        self.assertEqual(dict(total), {'eye':1})
+        
     def test_clear(self):
         self.bow.add('item')
         self.bow.add('item')

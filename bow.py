@@ -11,41 +11,27 @@ class BagOfWords(object):
         if isinstance(words, basestring):
             words = [words]
         for word in words:
+            n = 1
+            if isinstance(words, dict):
+                n = words[word]
             if word in self._bow:
-                self._bow[word] = operation(self._bow[word])
+                self._bow[word] = operation(self._bow[word], n)
             else:
-                self._bow[word] = operation(0)
+                self._bow[word] = operation(0, n)
             if self._bow[word] < 1:
                 del self._bow[word]
-
-##    http://stackoverflow.com/questions/10664856/make-dictionary-with-duplicate-keys-in-python
-##    def _calc2(self, operation, other):
-##        if isinstance(other, BagOfWords):
-##            result = copy.deepcopy (self) 
-##            for word, value in other._bow.items():
-##                if word in result._bow:
-##                    result._bow[word] = operation(self._bow[word], value)
-##                else:
-##                    result._bow[word] = operation(0, value)
-##                if result._bow[word] < 1:
-##                    del result._bow[word]
-##            return result
-##        else:
-##            result = copy.deepcopy(self)
-##            result._calc(result, other)
-##            return result
     
     def add(self, words):
         """Add word or word list to bag of words
         :param values: word or word list to add
         :return:nothing"""
-        self._calc(lambda x: x+1, words)
+        self._calc(lambda x,y: x+y, words)
 
     def delete(self, words):
         """Del word or word list from bag of words
         :param values: word or word list to add
         :return:nothing"""
-        self._calc(lambda x: x-1, words)
+        self._calc(lambda x,y: x-y, words)
 
     def freq(self, word):
         """Returning the frequency of a word
@@ -55,26 +41,34 @@ class BagOfWords(object):
             return self._bow[word]
         else:
             return 0
-
+        
     def __add__(self, other):
-        """ Overloading of "+" operator to join BagOfWord+BagOfWord, BagOfWords+str or BagOfWords+[]
-        :param other: BagOfWords
+        """ Overloading of "+" operator to join BagOfWord+BagOfWord, BagOfWords+str or BagOfWords+list
+        :param other: BagOfWords, str or list
         :return: BagOfWords"""
+        result = copy.deepcopy(self)
         if isinstance(other, BagOfWords):
-            result = copy.deepcopy (self) 
-            for key in other._bow:
-                if key in result._bow:
-                    result._bow[key] += other._bow[key]
-                else:
-                    result._bow[key] = other._bow[key] 
-            return result
+            result.add(dict(other))
         else:
-            result = copy.deepcopy(self)
             result.add(other)
-            return result
-      
+        return result
+
+    def __sub__(self, other):
+        """ Overloading of "-" operator to join BagOfWord+BagOfWord, BagOfWords+str or BagOfWords+list
+        :param other: BagOfWords, str or list
+        :return: BagOfWords"""
+        result = copy.deepcopy(self)
+        if isinstance(other, BagOfWords):
+            result.delete(dict(other))
+        else:
+            result.delete(other)
+        return result
+   
     def __radd__(self, other):
         return self.__add__(other)
+
+    def __rsub__(self, other):
+        return self.__sub__(other)
 
     def __iter__(self):
         return self._bow.iteritems()
