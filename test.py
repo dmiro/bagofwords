@@ -135,6 +135,16 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(a == self.bow, True)
         a.add('car')
         self.assertEqual(a == self.bow, False)
+
+    def test_has_key(self):
+        self.bow.add(['car', 'chair', 'chicken'])
+        self.assertEqual(self.bow.has_key('car'), True)
+        self.assertEqual('car' in self.bow, True)
+
+    def text_rate(self):
+        self.bow.add(['a','a','a','b'])
+        self.assertEqual(dict(self.bow), {'a':0.75, 'b':0.25})
+
         
 if __name__ == '__main__':
     unittest.main()

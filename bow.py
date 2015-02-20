@@ -7,17 +7,14 @@ class BagOfWords(object):
     def __init__(self):
         self._bow = {}
 
-    def _calc(self, operation, words):
+    def __calc(self, operation, words):
         if isinstance(words, basestring):
             words = [words]
         for word in words:
             n = 1
             if isinstance(words, dict):
                 n = words[word]
-            if word in self._bow:
-                self._bow[word] = operation(self._bow[word], n)
-            else:
-                self._bow[word] = operation(0, n)
+            self._bow[word] = operation(self._bow.setdefault(word, 0), n)
             if self._bow[word] < 1:
                 del self._bow[word]
                 
@@ -25,14 +22,19 @@ class BagOfWords(object):
         """Add word or word list to bag of words
         :param values: word or word list to add
         :return:nothing"""
-        self._calc(lambda x,y: x+y, words)
+        self.__calc(lambda x,y: x+y, words)
 
     def delete(self, words):
         """Del word or word list from bag of words
         :param values: word or word list to add
         :return:nothing"""
-        self._calc(lambda x,y: x-y, words)
+        self.__calc(lambda x,y: x-y, words)
 
+    def rates(self):
+        """Rate of occurrences"""
+        total = float(self.num())
+        return {k:v/total for k, v in self._bow.iteritems()}
+    
     def freq(self, word):
         """Returning the frequency of a word
         :param word: word to query
@@ -122,11 +124,10 @@ class BagOfWords(object):
         """Total number of words"""
         return sum(self._bow.values())
 
+    def has_key(self, key):
+        return self._bow.has_key(key)
 
-
-
-
-
-
-
+    def __contains__(self, key):
+        """method key in y"""
+        return self.has_key(key)
 
