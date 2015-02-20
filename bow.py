@@ -20,7 +20,7 @@ class BagOfWords(object):
                 self._bow[word] = operation(0, n)
             if self._bow[word] < 1:
                 del self._bow[word]
-    
+                
     def add(self, words):
         """Add word or word list to bag of words
         :param values: word or word list to add
@@ -46,7 +46,7 @@ class BagOfWords(object):
         """ Overloading of "+" operator to join BagOfWord+BagOfWord, BagOfWords+str or BagOfWords+list
         :param other: BagOfWords, str or list
         :return: BagOfWords"""
-        result = copy.deepcopy(self)
+        result = self.copy()
         if isinstance(other, BagOfWords):
             result.add(dict(other))
         else:
@@ -57,7 +57,7 @@ class BagOfWords(object):
         """ Overloading of "-" operator to join BagOfWord+BagOfWord, BagOfWords+str or BagOfWords+list
         :param other: BagOfWords, str or list
         :return: BagOfWords"""
-        result = copy.deepcopy(self)
+        result = self.copy()
         if isinstance(other, BagOfWords):
             result.delete(dict(other))
         else:
@@ -82,6 +82,20 @@ class BagOfWords(object):
     def __repr__(self):
         return self._bow.__repr__()
 
+    def __delitem__(self, key):
+        del self._bow[key]
+
+    def __cmp__(self, other):
+        if isinstance(other, BagOfWords):            
+            return cmp(self._bow, other._bow)      
+        else:                                     
+            return cmp(self._bow, other)    
+
+    def copy(self):                            
+        return copy.deepcopy(self) 
+
+    #def __setitem__(self, key, item): http://www.diveintopython.net/object_oriented_framework/userdict.html
+        
     def clear(self):
         """Clear word list"""
         self._bow.clear()
@@ -89,19 +103,26 @@ class BagOfWords(object):
     def iteritems(self):
         """Return an iterator over the word dictionary’s (word, frequency) pairs"""
         return self._bow.iteritems()
-            
-    @property
-    def num(self):
-        """Total number of words"""
-        total = 0
-        for key, value in self._bow.iteritems():
-            total += value
-        return total
 
-    @property
-    def words(self):
+    def keys(self):
         """Word list contained in the object"""
         return self._bow.keys()
+
+    def words(self):
+        """Word list contained in the object"""
+        return self.keys()
+
+    def items(self):
+        return self._bow.items()
+ 
+    def values(self):
+        return self._bow.values()
+
+    def num(self):
+        """Total number of words"""
+        return sum(self._bow.values())
+
+
 
 
 
