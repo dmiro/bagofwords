@@ -8,30 +8,29 @@ class BagOfWords(object):
         self._bow = {}
         self.add(*args)
 
-    def __calc(self, operation, words):
-        if isinstance(words, basestring):
-            words = [words]
-        for word in words:
-            n = 1
-            if isinstance(words, dict):
-                n = words[word]
-            self._bow[word] = operation(self._bow.setdefault(word, 0), n)
-            if self._bow[word] < 1:
-                del self._bow[word]
+    def __calc(self, operation, *args):
+        for words in args:
+            if isinstance(words, basestring):
+                words = [words]
+            for word in words:
+                n = 1
+                if isinstance(words, dict):
+                    n = words[word]
+                self._bow[word] = operation(self._bow.setdefault(word, 0), n)
+                if self._bow[word] < 1:
+                    del self._bow[word]
                 
     def add(self, *args):
-        """Add word or word list to bag of words
+        """Add set of word, word list or word dict to bag of words
         :param args: set of word or word list to add
         :return:nothing"""
-        for words in args:
-            self.__calc(lambda x,y: x+y, words)
+        self.__calc(lambda x,y: x+y, *args)
 
     def delete(self, *args):
-        """Del word or word list from bag of words
+        """Delete set of word, word list or word dict to bag of words
         :param args: set of word or word list to add
         :return:nothing"""
-        for words in args:
-            self.__calc(lambda x,y: x-y, words)
+        self.__calc(lambda x,y: x-y, *args)
 
     def rates(self):
         """Rate of occurrences"""
