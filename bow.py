@@ -4,8 +4,9 @@ import copy
 
 class BagOfWords(object):
 
-    def __init__(self):
+    def __init__(self, *args):
         self._bow = {}
+        self.add(*args)
 
     def __calc(self, operation, words):
         if isinstance(words, basestring):
@@ -18,17 +19,19 @@ class BagOfWords(object):
             if self._bow[word] < 1:
                 del self._bow[word]
                 
-    def add(self, words):
+    def add(self, *args):
         """Add word or word list to bag of words
-        :param values: word or word list to add
+        :param args: set of word or word list to add
         :return:nothing"""
-        self.__calc(lambda x,y: x+y, words)
+        for words in args:
+            self.__calc(lambda x,y: x+y, words)
 
-    def delete(self, words):
+    def delete(self, *args):
         """Del word or word list from bag of words
-        :param values: word or word list to add
+        :param args: set of word or word list to add
         :return:nothing"""
-        self.__calc(lambda x,y: x-y, words)
+        for words in args:
+            self.__calc(lambda x,y: x-y, words)
 
     def rates(self):
         """Rate of occurrences"""
@@ -130,4 +133,5 @@ class BagOfWords(object):
     def __contains__(self, key):
         """method key in y"""
         return self.has_key(key)
+
 

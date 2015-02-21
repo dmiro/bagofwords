@@ -9,8 +9,7 @@ class BagOfWordsTest(unittest.TestCase):
 
     def test_add_one_word(self):
         self.bow.add('David')
-        self.bow.add('David')
-        self.bow.add('David')
+        self.bow.add('David', 'David')
         self.assertEqual(self.bow.words(), ['David'])
         self.assertEqual(len(self.bow), 1)
         self.assertEqual(self.bow.num(), 3)
@@ -18,9 +17,7 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(self.bow), {'David':3})
 
     def test_add_two_words(self):
-        self.bow.add(u'David')
-        self.bow.add(u'David')
-        self.bow.add(u'Álex')
+        self.bow.add(u'David', [u'David',u'Álex'])
         self.assertEqual(self.bow.words(), [u'Álex', u'David'])
         self.assertEqual(len(self.bow), 2)
         self.assertEqual(self.bow.num(), 3)
@@ -33,8 +30,7 @@ class BagOfWordsTest(unittest.TestCase):
         self.bow.add('David')
         self.bow.delete('David')
         self.assertEqual(dict(self.bow), {})
-        self.bow.add('David')
-        self.bow.add('David')
+        self.bow.add('David', 'David')
         self.bow.delete('David')
         self.assertEqual(self.bow.words(), ['David'])
         self.assertEqual(len(self.bow), 1)
@@ -43,16 +39,12 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(self.bow), {'David':1})
 
     def test_del_two_word(self):
-        self.bow.delete('David')
-        self.bow.delete(u'Álex')
+        self.bow.delete('David', u'Álex')
         self.assertEqual(dict(self.bow), {})
-        self.bow.add('David')
-        self.bow.add(u'Álex')
-        self.bow.delete('David')
-        self.bow.delete(u'Álex')
+        self.bow.add('David', u'Álex')
+        self.bow.delete('David', u'Álex')
         self.assertEqual(dict(self.bow), {})
-        self.bow.add('David')
-        self.bow.add('David')
+        self.bow.add('David', 'David')
         self.bow.delete('David')
         self.bow.add(u'Álex')
         self.assertEqual(self.bow.words(), [u'Álex', 'David'])
@@ -62,12 +54,9 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(self.bow), {u'Álex':1, 'David':1})
         
     def test_join_add(self):
-        a = bow.BagOfWords()
-        b = bow.BagOfWords()
-        c = bow.BagOfWords()
-        a.add(['car', 'chair', 'chicken'])
-        b.add(['chicken', 'chicken', 'eye', 'ugly'])
-        c.add('plane')
+        a = bow.BagOfWords('car', 'chair', 'chicken')
+        b = bow.BagOfWords(['chicken', 'chicken', 'eye', 'ugly'])
+        c = bow.BagOfWords('plane')
         self.assertEqual(dict(a + b + c), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
         self.assertEqual(dict(c + b + a), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
         self.assertEqual(dict(b + c + a), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
@@ -83,12 +72,9 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(total), {'car': 2, 'chair': 2, 'eye': 2, 'chicken': 6, 'plane': 1, 'ugly': 1})
 
     def test_join_sub(self):
-        a = bow.BagOfWords()
-        b = bow.BagOfWords()
-        c = bow.BagOfWords()
-        a.add(['car', 'chair', 'chicken'])
-        b.add(['chicken', 'chicken', 'eye', 'ugly'])
-        c.add('plane')
+        a = bow.BagOfWords('car', 'chair', 'chicken')
+        b = bow.BagOfWords(['chicken', 'chicken', 'eye', 'ugly'])
+        c = bow.BagOfWords('plane')
         self.assertEqual(dict(a - b - c), {'car': 1, 'chair': 1})
         self.assertEqual(dict(c - b - a), {'plane': 1})
         self.assertEqual(dict(b - c - a), {'chicken':1, 'eye':1, 'ugly':1})
@@ -104,8 +90,7 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(total), {'eye':1})
         
     def test_clear(self):
-        self.bow.add('item')
-        self.bow.add('item')
+        self.bow.add('item', 'item')
         self.bow.clear()
         self.assertEqual(len(self.bow), 0)
         self.assertEqual(self.bow.num(), 0)
@@ -113,7 +98,7 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(self.bow), {})
 
     def test_item(self):
-        self.bow.add(['item1', 'item2', 'item2', 'item3'])
+        self.bow.add('item1', 'item2', 'item2', 'item3')
         self.assertEqual(self.bow['item2'], 2)
         self.assertEqual(self.bow['item3'], 1)
         self.assertEqual(self.bow['item1'], 1)
