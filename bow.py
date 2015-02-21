@@ -38,13 +38,20 @@ class BagOfWords(object):
         return {k:v/total for k, v in self._bow.iteritems()}
     
     def freq(self, word):
-        """Returning the frequency of a word
+        """Frequency of a word
         :param word: word to query
         :return: frequency"""
         if word in self._bow:
             return self._bow[word]
         else:
             return 0
+
+    def rate(self, word):
+        """Rate of a word
+        :param word: word to query
+        :return: rate"""
+        total = float(self.num())
+        return self.freq(word)/total
         
     def __add__(self, other):
         """ Overloading of "+" operator to join BagOfWord+BagOfWord, BagOfWords+str or BagOfWords+list

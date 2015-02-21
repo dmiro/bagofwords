@@ -129,6 +129,12 @@ class BagOfWordsTest(unittest.TestCase):
     def text_rate(self):
         self.bow.add(['a','a','a','b'])
         self.assertEqual(dict(self.bow), {'a':0.75, 'b':0.25})
+        self.assertEqual(self.bow.rate('a'), 0.75)
+        self.assertEqual(self.bow.rate('b'), 0.25)
+        self.assertEqual(self.bow.rate('c'), 0)
+        self.bow.clear()
+        self.assertEqual(self.bow.rate('a'), 0)
+        
 
         
 if __name__ == '__main__':
