@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import unittest
-import bow
+from bow import BagOfWords
 
 class BagOfWordsTest(unittest.TestCase):
 
     def setUp(self):
-        self.bow = bow.BagOfWords()
+        self.bow = BagOfWords()
 
     def test_add_one_word(self):
         self.bow.add('David')
@@ -54,9 +54,9 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(self.bow), {u'Álex':1, 'David':1})
         
     def test_join_add(self):
-        a = bow.BagOfWords('car', 'chair', 'chicken')
-        b = bow.BagOfWords({'chicken':2}, ['eye', 'ugly'])
-        c = bow.BagOfWords('plane')
+        a = BagOfWords('car', 'chair', 'chicken')
+        b = BagOfWords({'chicken':2}, ['eye', 'ugly'])
+        c = BagOfWords('plane')
         self.assertEqual(dict(a + b + c), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
         self.assertEqual(dict(c + b + a), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
         self.assertEqual(dict(b + c + a), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
@@ -72,9 +72,9 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(total), {'car': 2, 'chair': 2, 'eye': 2, 'chicken': 6, 'plane': 1, 'ugly': 1})
 
     def test_join_sub(self):
-        a = bow.BagOfWords('car', 'chair', 'chicken')
-        b = bow.BagOfWords({'chicken':2}, ['eye', 'ugly'])
-        c = bow.BagOfWords('plane')
+        a = BagOfWords('car', 'chair', 'chicken')
+        b = BagOfWords({'chicken':2}, ['eye', 'ugly'])
+        c = BagOfWords('plane')
         self.assertEqual(dict(a - b - c), {'car': 1, 'chair': 1})
         self.assertEqual(dict(c - b - a), {'plane': 1})
         self.assertEqual(dict(b - c - a), {'chicken':1, 'eye':1, 'ugly':1})
@@ -104,9 +104,9 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(self.bow['item1'], 1)
 
     def test_copy(self):
-        self.bow.add(['car', 'chair', 'chicken'])
-        a = self.bow.copy()
-        self.assertEqual(a == self.bow, True)
+        a = BagOfWords('car', 'chair', 'chicken')
+        b = a.copy()
+        self.assertEqual(a == b, True)
 
     def test_del(self):
         self.bow.add(['car', 'chair', 'chicken'])
@@ -114,28 +114,35 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(self.bow), {'chair':1, 'chicken':1})
 
     def test_cmp(self):
-        a = bow.BagOfWords()
-        self.bow.add(['car', 'chair', 'chicken'])
-        a.add(['car', 'chair', 'chicken'])
-        self.assertEqual(a == self.bow, True)
+        a = BagOfWords('car', 'chair', 'chicken')
+        b = BagOfWords('car', 'chair', 'chicken')
+        self.assertEqual(a == b, True)
         a.add('car')
-        self.assertEqual(a == self.bow, False)
+        self.assertEqual(a == b, False)
 
     def test_has_key(self):
-        self.bow.add(['car', 'chair', 'chicken'])
+        self.bow.add('car', 'chair', 'chicken')
         self.assertEqual(self.bow.has_key('car'), True)
         self.assertEqual('car' in self.bow, True)
 
-    def text_rate(self):
+    def test_rate(self):
         self.bow.add(['a','a','a','b'])
-        self.assertEqual(dict(self.bow), {'a':0.75, 'b':0.25})
+        self.assertEqual(self.bow.rates(), {'a':0.75, 'b':0.25})
         self.assertEqual(self.bow.rate('a'), 0.75)
         self.assertEqual(self.bow.rate('b'), 0.25)
         self.assertEqual(self.bow.rate('c'), 0)
         self.bow.clear()
         self.assertEqual(self.bow.rate('a'), 0)
-        
 
+    def test_json(self):
+        self.bow.add(['a','a','a','b'])
+        self.assertEqual(self.bow.to_json(), '{\n "a": 3, \n "b": 1\n}')
+        self.bow.clear()
+        self.assertEqual(self.bow.to_json(), '{}')
+        self.bow.from_json('{\n "a": 3, \n "b": 1\n}')
+        self.assertEqual(dict(self.bow), {'a': 3, 'b': 1})
+        self.bow.from_json('{}')
+        self.assertEqual(dict(self.bow), {})
         
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'dmiro'
 import copy
+import json
 
 class BagOfWords(object):
 
@@ -16,7 +17,7 @@ class BagOfWords(object):
                 n = 1
                 if isinstance(words, dict):
                     n = words[word]
-                self._bow[word] = operation(self._bow.setdefault(word, 0), n)
+                self._bow[word] = operation(self._bow.get(word, 0), n)
                 if self._bow[word] < 1:
                     del self._bow[word]
                 
@@ -35,7 +36,10 @@ class BagOfWords(object):
     def rates(self):
         """Rate of occurrences"""
         total = float(self.num())
-        return {k:v/total for k, v in self._bow.iteritems()}
+        if total:
+            return {k:v/total for k, v in self._bow.iteritems()}
+        else:
+            return {}
     
     def freq(self, word):
         """Frequency of a word
@@ -51,7 +55,10 @@ class BagOfWords(object):
         :param word: word to query
         :return: rate"""
         total = float(self.num())
-        return self.freq(word)/total
+        if total:
+            return self.freq(word)/total
+        else:
+            return 0
         
     def __add__(self, other):
         """ Overloading of "+" operator to join BagOfWord+BagOfWord, BagOfWords+str or BagOfWords+list
@@ -137,7 +144,26 @@ class BagOfWords(object):
         return self._bow.has_key(key)
 
     def __contains__(self, key):
-        """method key in y"""
+        """Method key in y"""
         return self.has_key(key)
+
+    def to_json(self):
+        """Convert dict to json string
+        :param other: BagOfWords, str or list
+        :return: BagOfWords"""
+        return json.dumps(self._bow, indent=1)
+
+    def from_json(self, data):
+        """Load dict from json string
+        :param data: json string
+        :return: nothing"""
+        self._bow = json.loads(data)
+
+##    def load_json(self, fn):
+##        pass
+##
+##    def save_json(self, fn):
+##        pass
+
 
 
