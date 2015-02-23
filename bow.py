@@ -2,6 +2,10 @@
 __author__ = 'dmiro'
 import copy
 import json
+import stop_words
+import unicodedata
+import Stemmer as stemmer
+
 
 class BagOfWords(object):
 
@@ -111,8 +115,6 @@ class BagOfWords(object):
 
     def copy(self):                            
         return copy.deepcopy(self) 
-
-    #def __setitem__(self, key, item): http://www.diveintopython.net/object_oriented_framework/userdict.html
         
     def clear(self):
         """Clear word list"""
@@ -158,7 +160,9 @@ class BagOfWords(object):
         :param data: json string
         :return: nothing"""
         self._bow = json.loads(data)
-
+##
+##     def __setitem__(self, key, item): http://www.diveintopython.net/object_oriented_framework/userdict.html
+##
 ##    def load_json(self, fn):
 ##        pass
 ##
@@ -166,4 +170,84 @@ class BagOfWords(object):
 ##        pass
 
 
+class TextFilters(object):
 
+    @staticmethod
+    def lower(text):
+        return text.lower()
+    
+    @staticmethod
+    def invalid_chars(text):
+        INVALID_CHARS = u"/\¨º-~#@|¡!,·$%&()¿?'[^""`]+}{><;,:.=*^_"
+        return ''.join([char for char in text if char not in INVALID_CHARS])
+
+    
+class WordsFilters(object):
+    
+    @staticmethod
+    def stemming(lang, stemming):
+        try:
+            __stemming = stemming
+            __stemmer = stemmer.Stemmer(lang)
+            def func(words):
+                for i in range(__stemming):
+                    words = __stemmer.stemWords(words)
+                return words
+        except KeyError:
+            def func(words):
+                return words 
+        return func
+    
+    @staticmethod
+    def stopwords(lang):
+        try:
+            __stopwords = stop_words.get_stop_words(lang)
+            def func(words):
+                return [word for word in words if word not in __stopwords]
+        except stop_words.StopWordError:
+            def func(words):
+                return words
+        return func
+    
+    @staticmethod
+    def normalize(words):
+        return [''.join((char for char in unicodedata.normalize('NFD', unicode(word)) if unicodedata.category(char) != 'Mn'))
+                for word in words]
+
+
+class Tokenizer(object):
+    
+    def __init__(self):
+        object.__init__(self)
+        self.__before = []
+        self.__after = []
+        
+    def before_tokenizer(self, *funcs):
+        self.__before.extend(funcs)
+        
+    def after_tokenizer(self, *funcs):
+        self.__after.extend(funcs)
+
+    def tokenizer(self, text):
+        for func in self.__before:
+            text = func(text)
+        words = text.split()
+        for func in self.__after:
+            words = func(words)
+        return words
+
+    def __call__(self, text):
+        return self.tokenizer(text)
+
+
+class DefaultTokenizer(Tokenizer):
+
+        def __init__(self, lang='english', stemming=1):
+             Tokenizer.__init__(self)
+             self.before_tokenizer(
+                 TextFilters.lower,
+                 TextFilters.invalid_chars)
+             self.after_tokenizer(
+                 WordsFilters.stopwords(lang),
+                 WordsFilters.stemming(lang,stemming),
+                 WordsFilters.normalize)

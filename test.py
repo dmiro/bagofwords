@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from bow import BagOfWords
+from bow import BagOfWords, TextFilters, WordsFilters, Tokenizer, DefaultTokenizer
 
 class BagOfWordsTest(unittest.TestCase):
 
@@ -143,6 +143,41 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(self.bow), {'a': 3, 'b': 1})
         self.bow.from_json('{}')
         self.assertEqual(dict(self.bow), {})
-        
+
+
+class TokenizerTest(unittest.TestCase):
+
+    def test_default_tokenizer(self):
+        tokens = DefaultTokenizer()
+        words = tokens('How do you convert a tuple to a list?');
+        self.assertEqual(words, [u'convert', u'tupl', u'list'])
+        words = tokens.tokenizer('How do you convert a tuple to a list?');
+        self.assertEqual(words, [u'convert', u'tupl', u'list'])
+        tokens = DefaultTokenizer(stemming=0)
+        words = tokens('How do you convert a tuple to a list?');
+        self.assertEqual(words, [u'convert', u'tuple', u'list'])
+        tokens = DefaultTokenizer(lang='', stemming=0)
+        words = tokens('How do you convert a tuple to a list?');
+        self.assertEqual(words, [u'how', u'do', u'you', u'convert', u'a', u'tuple', u'to', u'a', u'list'])
+        tokens = DefaultTokenizer(lang='spanish')
+        words = tokens(u'Cómo convertir una tupla a lista?');
+        self.assertEqual(words, [u'com', u'convert', u'tupl', u'list'])
+        tokens = DefaultTokenizer(lang='spanish', stemming=0)
+        words = tokens(u'Cómo convertir una tupla a lista?');
+        self.assertEqual(words, [u'como', u'convertir', u'tupla', u'lista'])
+        tokens = DefaultTokenizer(lang='', stemming=0)
+        words = tokens(u'Cómo convertir una tupla a lista?');
+        self.assertEqual(words, [u'como', u'convertir', u'una', u'tupla', u'a', u'lista'])
+
+    def test_tokenizer(self):
+        tokens = Tokenizer()
+        tokens.before_tokenizer(
+            TextFilters.lower)
+        tokens.after_tokenizer(
+            WordsFilters.normalize)
+        words = tokens('How, do you convert - a tuple to a list?');
+        self.assertEqual(words, [u'how,', u'do', u'you', u'convert', u'-', u'a', u'tuple', u'to', u'a', u'list?'])
+
+              
 if __name__ == '__main__':
     unittest.main()
