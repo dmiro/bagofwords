@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from bow import BagOfWords, TextFilters, WordsFilters, Tokenizer, DefaultTokenizer
+from bow import BagOfWords, TextFilters, WordFilters, Tokenizer, SimpleTokenizer, DefaultTokenizer
 
 class BagOfWordsTest(unittest.TestCase):
 
@@ -27,9 +27,11 @@ class BagOfWordsTest(unittest.TestCase):
     def test_del_one_word(self):
         self.bow.delete('David')
         self.assertEqual(dict(self.bow), {})
+        #
         self.bow.add('David')
         self.bow.delete('David')
         self.assertEqual(dict(self.bow), {})
+        #
         self.bow.add('David', 'David')
         self.bow.delete('David')
         self.assertEqual(self.bow.words(), ['David'])
@@ -41,9 +43,11 @@ class BagOfWordsTest(unittest.TestCase):
     def test_del_two_word(self):
         self.bow.delete('David', u'Álex')
         self.assertEqual(dict(self.bow), {})
+        #
         self.bow.add('David', u'Álex')
         self.bow.delete('David', u'Álex')
         self.assertEqual(dict(self.bow), {})
+        #
         self.bow.add({'David':2})
         self.bow.delete('David')
         self.bow.add(u'Álex')
@@ -60,13 +64,16 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(a + b + c), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
         self.assertEqual(dict(c + b + a), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
         self.assertEqual(dict(b + c + a), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 1})
+        #
         total = a + b + c
         total = 'ugly' + total
         self.assertEqual(dict(total), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 1, 'ugly': 2})
+        #
         total = a + b + c
         total = 'ugly' + total
         total = total + 'plane'
-        self.assertEqual(dict(total), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 2, 'ugly': 2})  
+        self.assertEqual(dict(total), {'car': 1, 'chair': 1, 'eye': 1, 'chicken': 3, 'plane': 2, 'ugly': 2})
+        #
         total = a + b + c
         total = total + ['car', 'chair', 'chicken'] + ['chicken', 'chicken', 'eye']
         self.assertEqual(dict(total), {'car': 2, 'chair': 2, 'eye': 2, 'chicken': 6, 'plane': 1, 'ugly': 1})
@@ -78,13 +85,16 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(a - b - c), {'car': 1, 'chair': 1})
         self.assertEqual(dict(c - b - a), {'plane': 1})
         self.assertEqual(dict(b - c - a), {'chicken':1, 'eye':1, 'ugly':1})
+        #
         total = b - c - a 
         total = 'eye' - total
         self.assertEqual(dict(total), {'chicken':1, 'ugly':1})
+        #
         total = b - c - a 
         total = 'eye' - total
         total = total - 'eye'
         self.assertEqual(dict(total), {'chicken':1, 'ugly':1})
+        #
         total = b - c - a 
         total = total - ['chicken', 'ugly']
         self.assertEqual(dict(total), {'eye':1})
@@ -117,6 +127,7 @@ class BagOfWordsTest(unittest.TestCase):
         a = BagOfWords('car', 'chair', 'chicken')
         b = BagOfWords('car', 'chair', 'chicken')
         self.assertEqual(a == b, True)
+        #
         a.add('car')
         self.assertEqual(a == b, False)
 
@@ -131,16 +142,20 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(self.bow.rate('a'), 0.75)
         self.assertEqual(self.bow.rate('b'), 0.25)
         self.assertEqual(self.bow.rate('c'), 0)
+        #
         self.bow.clear()
         self.assertEqual(self.bow.rate('a'), 0)
 
     def test_json(self):
         self.bow.add(['a','a','a','b'])
         self.assertEqual(self.bow.to_json(), '{\n "a": 3, \n "b": 1\n}')
+        #
         self.bow.clear()
         self.assertEqual(self.bow.to_json(), '{}')
+        #
         self.bow.from_json('{\n "a": 3, \n "b": 1\n}')
         self.assertEqual(dict(self.bow), {'a': 3, 'b': 1})
+        #
         self.bow.from_json('{}')
         self.assertEqual(dict(self.bow), {})
 
@@ -151,32 +166,41 @@ class TokenizerTest(unittest.TestCase):
         tokens = DefaultTokenizer()
         words = tokens('How do you convert a tuple to a list?');
         self.assertEqual(words, [u'convert', u'tupl', u'list'])
+        #
         words = tokens.tokenizer('How do you convert a tuple to a list?');
         self.assertEqual(words, [u'convert', u'tupl', u'list'])
+        #
         tokens = DefaultTokenizer(stemming=0)
         words = tokens('How do you convert a tuple to a list?');
         self.assertEqual(words, [u'convert', u'tuple', u'list'])
+        #
         tokens = DefaultTokenizer(lang='', stemming=0)
         words = tokens('How do you convert a tuple to a list?');
         self.assertEqual(words, [u'how', u'do', u'you', u'convert', u'a', u'tuple', u'to', u'a', u'list'])
+        #
         tokens = DefaultTokenizer(lang='spanish')
         words = tokens(u'Cómo convertir una tupla a lista?');
         self.assertEqual(words, [u'com', u'convert', u'tupl', u'list'])
+        #
         tokens = DefaultTokenizer(lang='spanish', stemming=0)
         words = tokens(u'Cómo convertir una tupla a lista?');
         self.assertEqual(words, [u'como', u'convertir', u'tupla', u'lista'])
+        #
         tokens = DefaultTokenizer(lang='', stemming=0)
         words = tokens(u'Cómo convertir una tupla a lista?');
         self.assertEqual(words, [u'como', u'convertir', u'una', u'tupla', u'a', u'lista'])
 
+    def test_simple_tokenizer(self):
+        tokens = SimpleTokenizer()
+        words = tokens('How, do you convert - a tuple to a list?');
+        self.assertEqual(words, [u'how', u'do', u'you', u'convert', u'a', u'tuple', u'to', u'a', u'list'])
+
     def test_tokenizer(self):
         tokens = Tokenizer()
-        tokens.before_tokenizer(
-            TextFilters.lower)
-        tokens.after_tokenizer(
-            WordsFilters.normalize)
+        tokens.before_tokenizer(TextFilters.upper())
+        tokens.after_tokenizer(WordFilters.normalize())
         words = tokens('How, do you convert - a tuple to a list?');
-        self.assertEqual(words, [u'how,', u'do', u'you', u'convert', u'-', u'a', u'tuple', u'to', u'a', u'list?'])
+        self.assertEqual(words, [u'HOW,', u'DO', u'YOU', u'CONVERT', u'-', u'A', u'TUPLE', u'TO', u'A', u'LIST?'])
 
               
 if __name__ == '__main__':

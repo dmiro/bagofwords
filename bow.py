@@ -2,9 +2,7 @@
 __author__ = 'dmiro'
 import copy
 import json
-import stop_words
 import unicodedata
-import Stemmer as stemmer
 
 
 class BagOfWords(object):
@@ -173,20 +171,37 @@ class BagOfWords(object):
 class TextFilters(object):
 
     @staticmethod
-    def lower(text):
-        return text.lower()
+    def upper():
+        """Convert text to uppercase"""
+        def func(text):
+            return text.upper()
+        return func
     
     @staticmethod
-    def invalid_chars(text):
-        INVALID_CHARS = u"/\¨º-~#@|¡!,·$%&()¿?'[^""`]+}{><;,:.=*^_"
-        return ''.join([char for char in text if char not in INVALID_CHARS])
-
+    def lower():
+        """Convert text to lowercase"""
+        def func(text):
+            return text.lower()
+        return func
     
-class WordsFilters(object):
+    @staticmethod
+    def invalid_chars():
+        """Remove invalid chars from a text"""
+        def func(text):
+            INVALID_CHARS = u"/\¨º-~#@|¡!,·$%&()¿?'[^""`]+}{><;,:.=*^_"
+            return ''.join([char for char in text if char not in INVALID_CHARS])
+        return func
+
+
+class WordFilters(object):
     
     @staticmethod
     def stemming(lang, stemming):
-        try:
+        """Lemmatize text
+        :param lang: lang text to lemmatize
+        :param stemming: number loops of lemmatizing"""
+        import Stemmer as stemmer
+        try:            
             __stemming = stemming
             __stemmer = stemmer.Stemmer(lang)
             def func(words):
@@ -200,7 +215,10 @@ class WordsFilters(object):
     
     @staticmethod
     def stopwords(lang):
-        try:
+        """Remove stop words from a text
+        :param lang: language text where remove empty words"""
+        import stop_words
+        try:            
             __stopwords = stop_words.get_stop_words(lang)
             def func(words):
                 return [word for word in words if word not in __stopwords]
@@ -210,9 +228,12 @@ class WordsFilters(object):
         return func
     
     @staticmethod
-    def normalize(words):
-        return [''.join((char for char in unicodedata.normalize('NFD', unicode(word)) if unicodedata.category(char) != 'Mn'))
-                for word in words]
+    def normalize():
+        """Normalize chars from a text"""
+        def func(words):
+            return [''.join((char for char in unicodedata.normalize('NFD', unicode(word)) if unicodedata.category(char) != 'Mn'))
+                    for word in words]
+        return func
 
 
 class Tokenizer(object):
@@ -223,12 +244,18 @@ class Tokenizer(object):
         self.__after = []
         
     def before_tokenizer(self, *funcs):
+        """function chain list to call before tokenizer text
+        :param *funcs: functions to add to chain list"""
         self.__before.extend(funcs)
         
     def after_tokenizer(self, *funcs):
+        """function chain list to call after tokenizer text
+        :param *funcs: functions to add to chain list"""
         self.__after.extend(funcs)
 
     def tokenizer(self, text):
+        """tokenize a text
+        :param text: text to tokenizer"""
         for func in self.__before:
             text = func(text)
         words = text.split()
@@ -245,9 +272,19 @@ class DefaultTokenizer(Tokenizer):
         def __init__(self, lang='english', stemming=1):
              Tokenizer.__init__(self)
              self.before_tokenizer(
-                 TextFilters.lower,
-                 TextFilters.invalid_chars)
+                 TextFilters.lower(),
+                 TextFilters.invalid_chars())
              self.after_tokenizer(
-                 WordsFilters.stopwords(lang),
-                 WordsFilters.stemming(lang,stemming),
-                 WordsFilters.normalize)
+                 WordFilters.stopwords(lang),
+                 WordFilters.stemming(lang, stemming),
+                 WordFilters.normalize())
+
+class SimpleTokenizer(Tokenizer):
+
+        def __init__(self):
+             Tokenizer.__init__(self)
+             self.before_tokenizer(
+                 TextFilters.lower(),
+                 TextFilters.invalid_chars())
+             self.after_tokenizer(
+                 WordFilters.normalize())
