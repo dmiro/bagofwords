@@ -22,7 +22,7 @@ class BagOfWords(object):
                 self._bow[word] = operation(self._bow.get(word, 0), n)
                 if self._bow[word] < 1:
                     del self._bow[word]
-                
+
     def add(self, *args):
         """Add set of word, word list or word dict to bag of words
         :param args: set of word or word list to add
@@ -42,7 +42,7 @@ class BagOfWords(object):
             return {k:v/total for k, v in self._bow.iteritems()}
         else:
             return {}
-    
+
     def freq(self, word):
         """Frequency of a word
         :param word: word to query
@@ -61,7 +61,7 @@ class BagOfWords(object):
             return self.freq(word)/total
         else:
             return 0
-        
+
     def __add__(self, other):
         """ Overloading of "+" operator to join BagOfWord+BagOfWord, BagOfWords+str or BagOfWords+list
         :param other: BagOfWords, str or list
@@ -83,7 +83,7 @@ class BagOfWords(object):
         else:
             result.delete(other)
         return result
-   
+
     def __radd__(self, other):
         return self.__add__(other)
 
@@ -98,7 +98,7 @@ class BagOfWords(object):
 
     def __len__(self):
         return self._bow.__len__()
-        
+
     def __repr__(self):
         return self._bow.__repr__()
 
@@ -106,14 +106,14 @@ class BagOfWords(object):
         del self._bow[key]
 
     def __cmp__(self, other):
-        if isinstance(other, BagOfWords):            
-            return cmp(self._bow, other._bow)      
-        else:                                     
-            return cmp(self._bow, other)    
+        if isinstance(other, BagOfWords):
+            return cmp(self._bow, other._bow)
+        else:
+            return cmp(self._bow, other)
 
-    def copy(self):                            
-        return copy.deepcopy(self) 
-        
+    def copy(self):
+        return copy.deepcopy(self)
+
     def clear(self):
         """Clear word list"""
         self._bow.clear()
@@ -132,7 +132,7 @@ class BagOfWords(object):
 
     def items(self):
         return self._bow.items()
- 
+
     def values(self):
         return self._bow.values()
 
@@ -176,14 +176,14 @@ class TextFilters(object):
         def func(text):
             return text.upper()
         return func
-    
+
     @staticmethod
     def lower():
         """Convert text to lowercase"""
         def func(text):
             return text.lower()
         return func
-    
+
     @staticmethod
     def invalid_chars():
         """Remove invalid chars from a text"""
@@ -194,14 +194,14 @@ class TextFilters(object):
 
 
 class WordFilters(object):
-    
+
     @staticmethod
     def stemming(lang, stemming):
         """Lemmatize text
         :param lang: lang text to lemmatize
         :param stemming: number loops of lemmatizing"""
         import Stemmer as stemmer
-        try:            
+        try:
             __stemming = stemming
             __stemmer = stemmer.Stemmer(lang)
             def func(words):
@@ -210,15 +210,15 @@ class WordFilters(object):
                 return words
         except KeyError:
             def func(words):
-                return words 
+                return words
         return func
-    
+
     @staticmethod
     def stopwords(lang):
         """Remove stop words from a text
         :param lang: language text where remove empty words"""
         import stop_words
-        try:            
+        try:
             __stopwords = stop_words.get_stop_words(lang)
             def func(words):
                 return [word for word in words if word not in __stopwords]
@@ -226,7 +226,7 @@ class WordFilters(object):
             def func(words):
                 return words
         return func
-    
+
     @staticmethod
     def normalize():
         """Normalize chars from a text"""
@@ -237,17 +237,17 @@ class WordFilters(object):
 
 
 class Tokenizer(object):
-    
+
     def __init__(self):
         object.__init__(self)
         self.__before = []
         self.__after = []
-        
+
     def before_tokenizer(self, *funcs):
         """function chain list to call before tokenizer text
         :param *funcs: functions to add to chain list"""
         self.__before.extend(funcs)
-        
+
     def after_tokenizer(self, *funcs):
         """function chain list to call after tokenizer text
         :param *funcs: functions to add to chain list"""
@@ -267,24 +267,86 @@ class Tokenizer(object):
         return self.tokenizer(text)
 
 
+class DocumentClass(Tokenizer):
+
+    def __init__(self, category):
+        Tokenizer.__init__(self)
+        self._category = category
+        self._docs = {}
+        self._total = BagOfWords()
+
+    def read_text(self, id, text):
+        """The text is stored in a BagOfWords identified by id
+        :param id: BagOfWord identifier
+        :param text: text to add a BagOfWords
+        :return: BagOfWords"""
+        words = self.tokenizer(text)
+        if id in self._docs:
+            self._total -= self._docs[id]
+        self._docs[id] = BagOfWords(words)
+        self._total.add(words)
+        return self._docs[id] 
+
+    def read_filename(self, filename):
+        """The contents of the file is stored in a BagOfWord identified by the filename
+        :param filename: filename to add 
+        :return: BagOfWords"""
+        try:
+            text = open(filename,"r", encoding='utf-8').read()
+        except UnicodeDecodeError:
+            text = open(filename,"r", encoding='latin-1').read()
+        return self.read_text(filename, text)
+
+    def read_filenames(self, filenames):
+        """The contents of each file or files is stored in a BagOfWord identified by the filename
+        :param filename: filename array to add
+        :return: Nothing"""
+        for filename in filenames:
+            self.read_filename(filename)
+
+    def __call__(self, id, text):
+        return self.read_text(id, text)
+
+    def docs(self):
+        return self._docs
+
+    def total(self):
+        return self._total
+
+
 class DefaultTokenizer(Tokenizer):
 
-        def __init__(self, lang='english', stemming=1):
-             Tokenizer.__init__(self)
-             self.before_tokenizer(
-                 TextFilters.lower(),
-                 TextFilters.invalid_chars())
-             self.after_tokenizer(
-                 WordFilters.stopwords(lang),
-                 WordFilters.stemming(lang, stemming),
-                 WordFilters.normalize())
+    def __init__(self, lang='english', stemming=1):
+         Tokenizer.__init__(self)
+         self.before_tokenizer(
+             TextFilters.lower(),
+             TextFilters.invalid_chars())
+         self.after_tokenizer(
+             WordFilters.stopwords(lang),
+             WordFilters.stemming(lang, stemming),
+             WordFilters.normalize())
+
 
 class SimpleTokenizer(Tokenizer):
 
-        def __init__(self):
-             Tokenizer.__init__(self)
-             self.before_tokenizer(
-                 TextFilters.lower(),
-                 TextFilters.invalid_chars())
-             self.after_tokenizer(
-                 WordFilters.normalize())
+    def __init__(self):
+         Tokenizer.__init__(self)
+         self.before_tokenizer(
+             TextFilters.lower(),
+             TextFilters.invalid_chars())
+         self.after_tokenizer(
+             WordFilters.normalize())
+
+
+class DefaultDocumentClass(DocumentClass, DefaultTokenizer):
+
+    def __init__(self, category, lang='english', stemming=1):
+        DocumentClass.__init__(self, category)
+        DefaultTokenizer.__init__(self, lang, stemming)
+
+
+class SimpleDocumentClass(DocumentClass, SimpleTokenizer):
+
+    def __init__(self, category):
+        DocumentClass.__init__(self, category)
+        SimpleTokenizer.__init__(self)

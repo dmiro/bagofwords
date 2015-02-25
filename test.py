@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
-from bow import BagOfWords, TextFilters, WordFilters, Tokenizer, SimpleTokenizer, DefaultTokenizer
+from unittest import TestCase
+from bow import BagOfWords, TextFilters, WordFilters, Tokenizer, SimpleTokenizer, DefaultTokenizer, DefaultDocumentClass
 
-class BagOfWordsTest(unittest.TestCase):
+class BagOfWordsTest(TestCase):
 
     def setUp(self):
         self.bow = BagOfWords()
@@ -160,7 +161,7 @@ class BagOfWordsTest(unittest.TestCase):
         self.assertEqual(dict(self.bow), {})
 
 
-class TokenizerTest(unittest.TestCase):
+class TokenizerTest(TestCase):
 
     def test_default_tokenizer(self):
         tokens = DefaultTokenizer()
@@ -202,6 +203,21 @@ class TokenizerTest(unittest.TestCase):
         words = tokens('How, do you convert - a tuple to a list?');
         self.assertEqual(words, [u'HOW,', u'DO', u'YOU', u'CONVERT', u'-', u'A', u'TUPLE', u'TO', u'A', u'LIST?'])
 
-              
+
+class TokenizerTest(TestCase):
+
+    def test_default_document_class(self):
+        dclass = DefaultDocumentClass('hello')
+        bow = dclass.read_text('text one','hello a beautiful world!')
+        self.assertEqual(bow, {u'world': 1, u'hello': 1, u'beauti': 1})
+        #
+        dclass = DefaultDocumentClass('hello')
+        dclass('text one','hello a beautiful world!')
+        dclass('text two','hello the Moon!')
+        dclass('text one','hello the world!')
+        self.assertEqual(dclass.docs(), {'text two': {u'hello': 1, u'moon': 1}, 'text one': {u'world': 1, u'hello': 1}})
+        self.assertEqual(dclass.total(), {u'world': 1, u'hello': 2, u'moon': 1})
+
+  
 if __name__ == '__main__':
     unittest.main()
