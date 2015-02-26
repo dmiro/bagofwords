@@ -2,6 +2,7 @@
 __author__ = 'dmiro'
 import copy
 import json
+import urllib2
 import unicodedata
 
 
@@ -285,24 +286,36 @@ class DocumentClass(Tokenizer):
             self._total -= self._docs[id]
         self._docs[id] = BagOfWords(words)
         self._total.add(words)
-        return self._docs[id] 
-
-    def read_filename(self, filename):
-        """The contents of the file is stored in a BagOfWord identified by the filename
-        :param filename: filename to add 
-        :return: BagOfWords"""
-        try:
-            text = open(filename,"r", encoding='utf-8').read()
-        except UnicodeDecodeError:
-            text = open(filename,"r", encoding='latin-1').read()
-        return self.read_text(filename, text)
+        return self._docs[id]
 
     def read_filenames(self, filenames):
         """The contents of each file or files is stored in a BagOfWord identified by the filename
-        :param filename: filename array to add
-        :return: Nothing"""
+        :param filename: filename or filename array to add
+        :return: BagOfWord dict"""
+        if isinstance(filenames, basestring):
+            filenames = [filenames]
+        docs = {}
         for filename in filenames:
-            self.read_filename(filename)
+            try:
+                text = open(filename, "r", encoding='utf-8').read()
+            except UnicodeDecodeError:
+                text = open(filename, "r", encoding='latin-1').read()
+            docs[filename] = self.read_text(filename, text)
+        return docs
+
+    def read_urls(self, urls):
+        """The contents of each url or urls is stored in a BagOfWord identified by the url
+        :param filename: url or url array to add
+        :return: BagOfWord dict"""
+        if isinstance(url, basestring):
+            urls = [urls]
+        docs = {}
+        for url in urls:
+            USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20140129 Firefox/24.0"
+            req = urllib2.Request(url, headers={ 'User-Agent': USER_AGENT })
+            text = urllib2.urlopen(req).read()
+            docs[url] = self.read_text(url, text)
+        return docs
 
     def __call__(self, id, text):
         return self.read_text(id, text)
