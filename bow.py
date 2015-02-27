@@ -288,34 +288,31 @@ class DocumentClass(Tokenizer):
         self._total.add(words)
         return self._docs[id]
 
-    def read_filenames(self, filenames):
+    def read_files(self, *filenames):
         """The contents of each file or files is stored in a BagOfWord identified by the filename
-        :param filename: filename or filename array to add
+        :param *filenames: filenames to add
         :return: BagOfWord dict"""
-        if isinstance(filenames, basestring):
-            filenames = [filenames]
         docs = {}
         for filename in filenames:
-            try:
-                text = open(filename, "r", encoding='utf-8').read()
-            except UnicodeDecodeError:
-                text = open(filename, "r", encoding='latin-1').read()
+            text = open(filename, 'r').read()
             docs[filename] = self.read_text(filename, text)
         return docs
 
-    def read_urls(self, urls):
+    def read_urls(self, *urls):
         """The contents of each url or urls is stored in a BagOfWord identified by the url
-        :param filename: url or url array to add
+        :param *urls: urls to add
         :return: BagOfWord dict"""
-        if isinstance(url, basestring):
-            urls = [urls]
         docs = {}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20140129 Firefox/24.0'}
         for url in urls:
-            USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20140129 Firefox/24.0"
-            req = urllib2.Request(url, headers={ 'User-Agent': USER_AGENT })
+            req = urllib2.Request(url=url, headers=headers)
             text = urllib2.urlopen(req).read()
+            text = text.decode('utf-8')
             docs[url] = self.read_text(url, text)
         return docs
+
+##    def read_zips(self, *zips):
+##        pass
 
     def __call__(self, id, text):
         return self.read_text(id, text)
@@ -363,3 +360,4 @@ class SimpleDocumentClass(DocumentClass, SimpleTokenizer):
     def __init__(self, category):
         DocumentClass.__init__(self, category)
         SimpleTokenizer.__init__(self)
+
