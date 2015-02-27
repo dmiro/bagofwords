@@ -4,7 +4,7 @@ import copy
 import json
 import urllib2
 import unicodedata
-
+from HTMLParser import HTMLParser
 
 class BagOfWords(object):
 
@@ -191,6 +191,31 @@ class TextFilters(object):
         def func(text):
             INVALID_CHARS = u"/\¨º-~#@|¡!,·$%&()¿?'[^""`]+}{><;,:.=*^_"
             return ''.join([char for char in text if char not in INVALID_CHARS])
+        return func
+
+    @staticmethod
+    def html_to_text():
+        """Conversion from HTML markup to plain text"""
+        def func(text):
+            class _HTMLParser(HTMLParser):
+                
+                def __init__(self):
+                    HTMLParser.__init__(self)
+                    self.text = []
+             
+                def handle_data(self, data):
+                    append = True
+                    text = data.split()
+                    if text:
+                        tag = self.get_starttag_text()
+                        if tag:
+                            tag = tag.lower()
+                            append = not tag.startswith(('<script','<style'))
+                        if append:
+                            self.text.extend(text)
+            parser = _HTMLParser()
+            parser.feed(text)
+            return ' '.join(parser.text)
         return func
 
 

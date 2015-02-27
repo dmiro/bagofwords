@@ -198,13 +198,42 @@ class TokenizerTest(TestCase):
 
     def test_tokenizer(self):
         tokens = Tokenizer()
-        tokens.before_tokenizer(TextFilters.upper())
-        tokens.after_tokenizer(WordFilters.normalize())
+        tokens.before_tokenizer(
+            TextFilters.upper())
+        tokens.after_tokenizer(
+            WordFilters.normalize())
         words = tokens('How, do you convert - a tuple to a list?');
         self.assertEqual(words, [u'HOW,', u'DO', u'YOU', u'CONVERT', u'-', u'A', u'TUPLE', u'TO', u'A', u'LIST?'])
+        #
+        tokens = Tokenizer()
+        tokens.before_tokenizer(
+            TextFilters.html_to_text(),
+            TextFilters.invalid_chars(),
+            TextFilters.lower())
+        tokens.after_tokenizer(
+            WordFilters.stopwords('english'),
+            WordFilters.normalize())
+        text = '''
+                <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+                <html>
+                    <body>
+                        <!--my comment -->
+                        <script>my script</script>
+                        <SCRIPT>another script</script>
+                        <style>my style</style>
+                        <h3>my project!!</h3> <br>
+                        <b>Description</b>:<br/>
+                        This small script is intended to allow conversion from HTML markup to plain text.
+                    </body>
+                </html>
+                '''
+        words = tokens(text)
+        self.assertEqual(words, [u'project', u'description', u'small', u'script', u'intended', u'allow', u'conversion',
+                                 u'html', u'markup', u'plain', u'text'])
 
 
-class TokenizerTest(TestCase):
+class DocumentClassTest(TestCase):
 
     def test_default_document_class(self):
         dclass = DefaultDocumentClass('hello')
