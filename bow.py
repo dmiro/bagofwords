@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'dmiro'
+import os
 import copy
 import json
 import urllib2
@@ -198,11 +199,11 @@ class TextFilters(object):
         """Conversion from HTML markup to plain text"""
         def func(text):
             class _HTMLParser(HTMLParser):
-                
+
                 def __init__(self):
                     HTMLParser.__init__(self)
                     self.text = []
-             
+
                 def handle_data(self, data):
                     append = True
                     text = data.split()
@@ -320,8 +321,19 @@ class DocumentClass(Tokenizer):
         docs = {}
         for filename in filenames:
             text = open(filename, 'r').read()
+            text = text.decode('utf-8')
             docs[filename] = self.read_text(filename, text)
         return docs
+
+    def read_dir(self, path):
+        """The contents of each file o files of a directory is stored in a BagOfWord identified by the filename
+        :param path: directoy path to add files
+        :return: BagOfWord dict"""
+        fn = []
+        for (_, _, filenames) in os.walk(path):
+            fn.extend([os.path.join(path,f) for f in filenames])
+            break
+        return self.read_files(*fn)
 
     def read_urls(self, *urls):
         """The contents of each url or urls is stored in a BagOfWord identified by the url
