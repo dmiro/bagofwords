@@ -6,6 +6,7 @@ import json
 import urllib2
 import unicodedata
 from HTMLParser import HTMLParser
+from zipfile import ZipFile
 
 class BagOfWords(object):
 
@@ -348,8 +349,19 @@ class DocumentClass(Tokenizer):
             docs[url] = self.read_text(url, text)
         return docs
 
-##    def read_zips(self, *zips):
-##        pass
+    def read_zips(self, *zipfilenames):
+        """The contents of each file o files of a zip file is stored in a BagOfWord identified by the filename
+        :param *zipfilenames: zip files to add
+        :return: BagOfWord dict"""
+        docs = {}
+        for zipfilename in zipfilenames:
+            input_zip = ZipFile(zipfilename)
+            for input_file in input_zip.infolist():
+                if input_file.file_size > 0:
+                    text = input_zip.read(input_file)
+                    text = text.decode('utf-8')
+                    docs[input_file.filename] = self.read_text(input_file.filename, text)
+        return docs
 
     def __call__(self, id, text):
         return self.read_text(id, text)
@@ -397,4 +409,8 @@ class SimpleDocumentClass(DocumentClass, SimpleTokenizer):
     def __init__(self, category):
         DocumentClass.__init__(self, category)
         SimpleTokenizer.__init__(self)
+
+
+
+
 
