@@ -150,6 +150,9 @@ class BagOfWords(object):
         """Method key in y"""
         return self.has_key(key)
 
+    def __call__(self, *args):
+         self.add(self, *args)
+
     def to_json(self):
         """Convert dict to json string
         :param other: BagOfWords, str or list
@@ -161,6 +164,7 @@ class BagOfWords(object):
         :param data: json string
         :return: nothing"""
         self._bow = json.loads(data)
+
 ##
 ##     def __setitem__(self, key, item): http://www.diveintopython.net/object_oriented_framework/userdict.html
 ##
@@ -409,8 +413,4 @@ class SimpleDocumentClass(DocumentClass, SimpleTokenizer):
     def __init__(self, category):
         DocumentClass.__init__(self, category)
         SimpleTokenizer.__init__(self)
-
-
-
-
 
