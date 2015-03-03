@@ -4,6 +4,7 @@ import os
 import copy
 import json
 import urllib2
+import inspect
 import unicodedata
 from HTMLParser import HTMLParser
 from zipfile import ZipFile
@@ -376,6 +377,37 @@ class DocumentClass(Tokenizer):
     def total(self):
         return self._total
 
+    def to_json(self):
+        class _Encoder(json.JSONEncoder):
+
+            def default(self, obj):
+                if isinstance(obj, DocumentClass):
+                    x = {"__type__": "DocumentClass"}
+                    x.update(obj.__dict__)
+                    return x
+                if isinstance(obj, BagOfWords):
+                    x = {"__type__": "BagOfWords"}
+                    x.update(obj.__dict__)
+                    return x
+                if not inspect.isfunction(obj):
+                    return json.JSONEncoder.default(self, obj)
+
+        return json.dumps(self, indent=1, cls=_Encoder)
+
+    def from_json(self):
+        pass
+
+## http://taketwoprogramming.blogspot.com.es/2009/06/subclassing-jsonencoder-and-jsondecoder.html
+##def as_car(dct):
+##    if '__type__' in dct:
+##        if dct['__type__'] == 'Car':
+##            c = Car()
+##            c.ruedas = dct['ruedas']
+##            c.color = dct['color']
+##            return c
+##    return dct
+##xxx = json.loads(mm, object_hook=as_car)
+
 
 class DefaultTokenizer(Tokenizer):
 
@@ -413,4 +445,6 @@ class SimpleDocumentClass(DocumentClass, SimpleTokenizer):
     def __init__(self, category):
         DocumentClass.__init__(self, category)
         SimpleTokenizer.__init__(self)
+
+
 
