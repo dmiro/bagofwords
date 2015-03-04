@@ -57,7 +57,7 @@ class BagOfWordsTest(TestCase):
         self.assertEqual(self.bow.num(), 2)
         self.assertEqual(self.bow.freq('David'), 1)
         self.assertEqual(dict(self.bow), {u'Álex':1, 'David':1})
-        
+
     def test_join_add(self):
         a = BagOfWords('car', 'chair', 'chicken')
         b = BagOfWords({'chicken':2}, ['eye', 'ugly'])
@@ -87,19 +87,19 @@ class BagOfWordsTest(TestCase):
         self.assertEqual(dict(c - b - a), {'plane': 1})
         self.assertEqual(dict(b - c - a), {'chicken':1, 'eye':1, 'ugly':1})
         #
-        total = b - c - a 
+        total = b - c - a
         total = 'eye' - total
         self.assertEqual(dict(total), {'chicken':1, 'ugly':1})
         #
-        total = b - c - a 
+        total = b - c - a
         total = 'eye' - total
         total = total - 'eye'
         self.assertEqual(dict(total), {'chicken':1, 'ugly':1})
         #
-        total = b - c - a 
+        total = b - c - a
         total = total - ['chicken', 'ugly']
         self.assertEqual(dict(total), {'eye':1})
-        
+
     def test_clear(self):
         self.bow.add('item', 'item')
         self.bow.clear()
@@ -197,22 +197,39 @@ class TokenizerTest(TestCase):
         self.assertEqual(words, [u'how', u'do', u'you', u'convert', u'a', u'tuple', u'to', u'a', u'list'])
 
     def test_tokenizer(self):
-        tokens = Tokenizer()
-        tokens.before_tokenizer(
-            TextFilters.upper())
-        tokens.after_tokenizer(
-            WordFilters.normalize())
+
+        class _MyTokenizer(Tokenizer):
+
+            def __init__(self):
+                 Tokenizer.__init__(self)
+
+            def before_tokenizer(self, textfilters, text):
+                text = textfilters.upper(text)
+                return text
+
+            def after_tokenizer(self, wordfilters, words):
+                words = wordfilters.normalize(words)
+                return words
+        tokens = _MyTokenizer()
         words = tokens('How, do you convert - a tuple to a list?');
         self.assertEqual(words, [u'HOW,', u'DO', u'YOU', u'CONVERT', u'-', u'A', u'TUPLE', u'TO', u'A', u'LIST?'])
         #
-        tokens = Tokenizer()
-        tokens.before_tokenizer(
-            TextFilters.html_to_text(),
-            TextFilters.invalid_chars(),
-            TextFilters.lower())
-        tokens.after_tokenizer(
-            WordFilters.stopwords('english'),
-            WordFilters.normalize())
+        class _MyTokenizer(Tokenizer):
+
+            def __init__(self):
+                 Tokenizer.__init__(self)
+
+            def before_tokenizer(self, textfilters, text):
+                text = textfilters.html_to_text(text)
+                text = textfilters.invalid_chars(text)
+                text = textfilters.lower(text)
+                return text
+
+            def after_tokenizer(self, wordfilters, words):
+                words = wordfilters.stopwords('english', words)
+                words = wordfilters.normalize(words)
+                return words
+        tokens = _MyTokenizer()
         text = '''
                 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
                 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -247,6 +264,6 @@ class DocumentClassTest(TestCase):
         self.assertEqual(dclass.docs(), {'text two': {u'hello': 1, u'moon': 1}, 'text one': {u'world': 1, u'hello': 1}})
         self.assertEqual(dclass.total(), {u'world': 1, u'hello': 2, u'moon': 1})
 
-  
+
 if __name__ == '__main__':
     unittest.main()

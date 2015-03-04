@@ -167,134 +167,106 @@ class BagOfWords(object):
         :return: nothing"""
         self._bow = json.loads(data)
 
-##
-##     def __setitem__(self, key, item): http://www.diveintopython.net/object_oriented_framework/userdict.html
-##
-##    def load_json(self, fn):
-##        pass
-##
-##    def save_json(self, fn):
-##        pass
-
 
 class TextFilters(object):
 
     @staticmethod
-    def upper():
+    def upper(text):
         """Convert text to uppercase"""
-        def func(text):
-            return text.upper()
-        return func
+        return text.upper()
 
     @staticmethod
-    def lower():
+    def lower(text):
         """Convert text to lowercase"""
-        def func(text):
-            return text.lower()
-        return func
+        return text.lower()
 
     @staticmethod
-    def invalid_chars():
+    def invalid_chars(text):
         """Remove invalid chars from a text"""
-        def func(text):
-            INVALID_CHARS = u"/\¨º-~#@|¡!,·$%&()¿?'[^""`]+}{><;,:.=*^_"
-            return ''.join([char for char in text if char not in INVALID_CHARS])
-        return func
+        INVALID_CHARS = u"/\¨º-~#@|¡!,·$%&()¿?'[^""`]+}{><;,:.=*^_"
+        return ''.join([char for char in text if char not in INVALID_CHARS])
 
     @staticmethod
-    def html_to_text():
+    def html_to_text(text):
         """Conversion from HTML markup to plain text"""
-        def func(text):
-            class _HTMLParser(HTMLParser):
+        class _HTMLParser(HTMLParser):
 
-                def __init__(self):
-                    HTMLParser.__init__(self)
-                    self.text = []
+            def __init__(self):
+                HTMLParser.__init__(self)
+                self.text = []
 
-                def handle_data(self, data):
-                    append = True
-                    text = data.split()
-                    if text:
-                        tag = self.get_starttag_text()
-                        if tag:
-                            tag = tag.lower()
-                            append = not tag.startswith(('<script','<style'))
-                        if append:
-                            self.text.extend(text)
-            parser = _HTMLParser()
-            parser.feed(text)
-            return ' '.join(parser.text)
-        return func
+            def handle_data(self, data):
+                append = True
+                text = data.split()
+                if text:
+                    tag = self.get_starttag_text()
+                    if tag:
+                        tag = tag.lower()
+                        append = not tag.startswith(('<script','<style'))
+                    if append:
+                        self.text.extend(text)
+        parser = _HTMLParser()
+        parser.feed(text)
+        return ' '.join(parser.text)
 
 
 class WordFilters(object):
 
     @staticmethod
-    def stemming(lang, stemming):
+    def stemming(lang, stemming, words):
         """Lemmatize text
         :param lang: lang text to lemmatize
         :param stemming: number loops of lemmatizing"""
         import Stemmer as stemmer
         try:
-            __stemming = stemming
-            __stemmer = stemmer.Stemmer(lang)
-            def func(words):
-                for i in range(__stemming):
-                    words = __stemmer.stemWords(words)
-                return words
+            stemmer = stemmer.Stemmer(lang)
+            for i in range(stemming):
+                words = stemmer.stemWords(words)
+            return words
         except KeyError:
-            def func(words):
-                return words
-        return func
+            return words
 
     @staticmethod
-    def stopwords(lang):
+    def stopwords(lang, words):
         """Remove stop words from a text
         :param lang: language text where remove empty words"""
         import stop_words
         try:
-            __stopwords = stop_words.get_stop_words(lang)
-            def func(words):
-                return [word for word in words if word not in __stopwords]
+            stopwords = stop_words.get_stop_words(lang)
+            return [word for word in words if word not in stopwords]
         except stop_words.StopWordError:
-            def func(words):
-                return words
-        return func
+            return words
 
     @staticmethod
-    def normalize():
+    def normalize(words):
         """Normalize chars from a text"""
-        def func(words):
-            return [''.join((char for char in unicodedata.normalize('NFD', unicode(word)) if unicodedata.category(char) != 'Mn'))
-                    for word in words]
-        return func
+        return [''.join((char for char in unicodedata.normalize('NFD', unicode(word)) if unicodedata.category(char) != 'Mn'))
+                for word in words]
 
 
 class Tokenizer(object):
 
     def __init__(self):
         object.__init__(self)
-        self.__before = []
-        self.__after = []
 
-    def before_tokenizer(self, *funcs):
-        """function chain list to call before tokenizer text
-        :param *funcs: functions to add to chain list"""
-        self.__before.extend(funcs)
+    def before_tokenizer(self, textfilters, text):
+        """function to call before tokenizer text
+        :param textfilters: static class with helper methods to filter text
+        :param text: The text will be split"""
+        return text
 
-    def after_tokenizer(self, *funcs):
-        """function chain list to call after tokenizer text
-        :param *funcs: functions to add to chain list"""
-        self.__after.extend(funcs)
+    def after_tokenizer(self, wordfilters, words):
+        """function to call after tokenizer text
+        :param wordfilters: static class with helper methods to filter words
+        :param words: split words"""
+        return words
 
     def tokenizer(self, text):
         """tokenize a text
         :param text: text to tokenizer"""
-        for func in self.__before:
-            text = func(text)
+        text = self.before_tokenizer(TextFilters, text)
         words = text.split()
-        for func in self.__after:
-            words = func(words)
+        words = self.after_tokenizer(WordFilters, words)
         return words
 
     def __call__(self, text):
@@ -412,6 +384,8 @@ class DocumentClass(Tokenizer):
                         obj = class_(d['_category'])
                         obj._docs = d['_docs']
                         obj._total = d['_total']
+                        ##"_stemming": 1,
+                        ##"_lang": "english",
                     elif issubclass(class_, BagOfWords):
                         obj = class_(d['_bow'])
                     else:
@@ -426,24 +400,33 @@ class DefaultTokenizer(Tokenizer):
 
     def __init__(self, lang='english', stemming=1):
          Tokenizer.__init__(self)
-         self.before_tokenizer(
-             TextFilters.lower(),
-             TextFilters.invalid_chars())
-         self.after_tokenizer(
-             WordFilters.stopwords(lang),
-             WordFilters.stemming(lang, stemming),
-             WordFilters.normalize())
+         self._lang = lang
+         self._stemming = stemming
 
+    def before_tokenizer(self, textfilters, text):
+        text = textfilters.lower(text)
+        text = textfilters.invalid_chars(text)
+        return text
+
+    def after_tokenizer(self, wordfilters, words):
+        words = wordfilters.stopwords(self._lang, words)
+        words = wordfilters.stemming(self._lang, self._stemming, words)
+        words = wordfilters.normalize(words)
+        return words
 
 class SimpleTokenizer(Tokenizer):
 
     def __init__(self):
          Tokenizer.__init__(self)
-         self.before_tokenizer(
-             TextFilters.lower(),
-             TextFilters.invalid_chars())
-         self.after_tokenizer(
-             WordFilters.normalize())
+
+    def before_tokenizer(self, textfilters, text):
+        text = textfilters.lower(text)
+        text = textfilters.invalid_chars(text)
+        return text
+
+    def after_tokenizer(self, wordfilters, words):
+        words = wordfilters.normalize(words)
+        return words
 
 
 class DefaultDocumentClass(DocumentClass, DefaultTokenizer):
