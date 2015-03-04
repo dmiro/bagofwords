@@ -2,12 +2,13 @@
 __author__ = 'dmiro'
 import os
 import copy
-import json
 import urllib2
 import inspect
 import unicodedata
 from HTMLParser import HTMLParser
 from zipfile import ZipFile
+from json import JSONEncoder, JSONDecoder
+import json
 
 class BagOfWords(object):
 
@@ -377,36 +378,48 @@ class DocumentClass(Tokenizer):
     def total(self):
         return self._total
 
+    def category(self):
+        return self._category
+
     def to_json(self):
-        class _Encoder(json.JSONEncoder):
+        class _Encoder(JSONEncoder):
 
             def default(self, obj):
-                if isinstance(obj, DocumentClass):
-                    x = {"__type__": "DocumentClass"}
-                    x.update(obj.__dict__)
-                    return x
-                if isinstance(obj, BagOfWords):
-                    x = {"__type__": "BagOfWords"}
-                    x.update(obj.__dict__)
-                    return x
+                if isinstance(obj, DocumentClass) or \
+                   isinstance(obj, BagOfWords):
+                    d = {'__class__': obj.__class__.__name__,
+                         '__module__':obj.__module__}
+                    d.update(obj.__dict__)
+                    return d
                 if not inspect.isfunction(obj):
-                    return json.JSONEncoder.default(self, obj)
+                    return super(_Encoder, self).default(obj)
 
-        return json.dumps(self, indent=1, cls=_Encoder)
+        return _Encoder().encode(self)
 
-    def from_json(self):
-        pass
+    def from_json(self, json_):
+        class _Decoder(JSONDecoder):
 
-## http://taketwoprogramming.blogspot.com.es/2009/06/subclassing-jsonencoder-and-jsondecoder.html
-##def as_car(dct):
-##    if '__type__' in dct:
-##        if dct['__type__'] == 'Car':
-##            c = Car()
-##            c.ruedas = dct['ruedas']
-##            c.color = dct['color']
-##            return c
-##    return dct
-##xxx = json.loads(mm, object_hook=as_car)
+            def __init__(self):
+                JSONDecoder.__init__(self, object_hook = self.dict_to_object)
+
+            def dict_to_object(self, d):
+                if '__class__' in d:
+                    class_name = d.pop('__class__')
+                    module_name = d.pop('__module__')
+                    module = __import__(module_name)
+                    class_ = getattr(module, class_name)
+                    if issubclass(class_, DocumentClass):
+                        obj = class_(d['_category'])
+                        obj._docs = d['_docs']
+                        obj._total = d['_total']
+                    elif issubclass(class_, BagOfWords):
+                        obj = class_(d['_bow'])
+                    else:
+                        obj = class_()
+                    return obj
+                return d
+
+        return _Decoder().decode(json_)
 
 
 class DefaultTokenizer(Tokenizer):
@@ -445,6 +458,3 @@ class SimpleDocumentClass(DocumentClass, SimpleTokenizer):
     def __init__(self, category):
         DocumentClass.__init__(self, category)
         SimpleTokenizer.__init__(self)
-
-
-
