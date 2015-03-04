@@ -381,15 +381,13 @@ class DocumentClass(Tokenizer):
                     module = __import__(module_name)
                     class_ = getattr(module, class_name)
                     if issubclass(class_, DocumentClass):
-                        obj = class_(d['_category'])
-                        obj._docs = d['_docs']
-                        obj._total = d['_total']
-                        ##"_stemming": 1,
-                        ##"_lang": "english",
+                        obj = class_(d.pop('_category'))
                     elif issubclass(class_, BagOfWords):
-                        obj = class_(d['_bow'])
+                        obj = class_(d.pop('_bow'))
                     else:
                         obj = class_()
+                    for k, v in d.iteritems():
+                        setattr(obj, k, v)
                     return obj
                 return d
 
