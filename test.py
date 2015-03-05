@@ -248,17 +248,18 @@ class DocumentClassTest(TestCase):
         dclass('text one','hello a beautiful world!')
         dclass('text two','hello the Moon!')
         dclass('text one','hello the world!')
-        self.assertEqual(dclass.docs(), {'text two': {u'hello': 1, u'moon': 1}, 'text one': {u'world': 1, u'hello': 1}})
-        self.assertEqual(dclass.total(), {u'world': 1, u'hello': 2, u'moon': 1})
+        self.assertEqual(dclass.docs, {'text two': {u'hello': 1, u'moon': 1}, 'text one': {u'world': 1, u'hello': 1}})
+        self.assertEqual(dclass.total, {u'world': 1, u'hello': 2, u'moon': 1})
 
     def test_json(self):
         dclass = DefaultDocumentClass('hello', 'spanish')
         dclass.read_text('text one','Hola mundo!')
         dclass.read_text('text two','Este es un bonito mundo')
-        self.assertEqual(dclass.to_json(), '{"_total": {"__module__": "bow", "__class__": "BagOfWords", "_bow": \
-{"mund": 2, "hol": 1, "bonit": 1}}, "__module__": "bow", "_stemming": 1, "_lang": "spanish", "_category": "hello", \
-"_docs": {"text two": {"__module__": "bow", "__class__": "BagOfWords", "_bow": {"mund": 1, "bonit": 1}}, "text one": \
-{"__module__": "bow", "__class__": "BagOfWords", "_bow": {"mund": 1, "hol": 1}}}, "__class__": "DefaultDocumentClass"}')
+        self.assertEqual(dclass.to_json(), '{"category": "hello", "lang": "spanish", "__module__": "bow", \
+"stemming": 1, "docs": {"text two": {"__module__": "bow", "__class__": "BagOfWords", "_bow": {"mund": 1, \
+"bonit": 1}}, "text one": {"__module__": "bow", "__class__": "BagOfWords", "_bow": {"mund": 1, "hol": 1}}}, \
+"total": {"__module__": "bow", "__class__": "BagOfWords", "_bow": {"mund": 2, "hol": 1, "bonit": 1}}, \
+"__class__": "DefaultDocumentClass"}')
         #
         dclass = DefaultDocumentClass('hello', 'spanish')
         dclass.read_text('text one','Hola mundo!')
@@ -266,11 +267,11 @@ class DocumentClassTest(TestCase):
         json_ = dclass.to_json()
         dclass = DocumentClass.from_json(json_)
         self.assertEqual(dclass.__class__.__name__ , 'DefaultDocumentClass')
-        self.assertEqual(dclass.docs(), {u'text two': {u'mund': 1, u'bonit': 1}, u'text one': {u'mund': 1, u'hol': 1}})
-        self.assertEqual(dclass.total(), {u'mund': 2, u'hol': 1, u'bonit': 1})
-        self.assertEqual(dclass.category(), 'hello')
-        self.assertEqual(dclass._lang, 'spanish')
-        self.assertEqual(dclass._stemming, 1)
+        self.assertEqual(dclass.docs, {u'text two': {u'mund': 1, u'bonit': 1}, u'text one': {u'mund': 1, u'hol': 1}})
+        self.assertEqual(dclass.total, {u'mund': 2, u'hol': 1, u'bonit': 1})
+        self.assertEqual(dclass.category, 'hello')
+        self.assertEqual(dclass.lang, 'spanish')
+        self.assertEqual(dclass.stemming, 1)
 
 if __name__ == '__main__':
     unittest.main()

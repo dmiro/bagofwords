@@ -286,9 +286,9 @@ class DocumentClass(Tokenizer):
 
     def __init__(self, category):
         Tokenizer.__init__(self)
-        self._category = category
-        self._docs = {}
-        self._total = BagOfWords()
+        self.category = category
+        self.docs = {}
+        self.total = BagOfWords()
 
     def read_text(self, id, text):
         """The text is stored in a BagOfWords identified by Id.
@@ -297,11 +297,11 @@ class DocumentClass(Tokenizer):
         :return: BagOfWords
         """
         words = self.tokenizer(text)
-        if id in self._docs:
-            self._total -= self._docs[id]
-        self._docs[id] = BagOfWords(words)
-        self._total.add(words)
-        return self._docs[id]
+        if id in self.docs:
+            self.total -= self.docs[id]
+        self.docs[id] = BagOfWords(words)
+        self.total.add(words)
+        return self.docs[id]
 
     def read_files(self, *filenames):
         """The contents of each file or files is stored in a BagOfWord identified by the filename.
@@ -360,15 +360,6 @@ class DocumentClass(Tokenizer):
     def __call__(self, id, text):
         return self.read_text(id, text)
 
-    def docs(self):
-        return self._docs
-
-    def total(self):
-        return self._total
-
-    def category(self):
-        return self._category
-
     def to_json(self):
         """Convert DocumentClass object to json string.
         :return: json
@@ -405,7 +396,7 @@ class DocumentClass(Tokenizer):
                     module = __import__(module_name)
                     class_ = getattr(module, class_name)
                     if issubclass(class_, DocumentClass):
-                        obj = class_(d.pop('_category'))
+                        obj = class_(d.pop('category'))
                     elif issubclass(class_, BagOfWords):
                         obj = class_(d.pop('_bow'))
                     else:
@@ -418,6 +409,13 @@ class DocumentClass(Tokenizer):
         return _Decoder().decode(json_)
 
 
+class DocumentClassPool(Object):
+    """
+    Pool of DocumentClass
+    """ 
+    pass
+
+
 class DefaultTokenizer(Tokenizer):
     """Tokenizer subclass that implements the text filters 'lower' and 'invalid_chars'
     and the word filters 'stopwords', 'stemming' and 'normalize'.
@@ -425,8 +423,8 @@ class DefaultTokenizer(Tokenizer):
 
     def __init__(self, lang='english', stemming=1):
          Tokenizer.__init__(self)
-         self._lang = lang
-         self._stemming = stemming
+         self.lang = lang
+         self.stemming = stemming
 
     def before_tokenizer(self, textfilters, text):
         text = textfilters.lower(text)
@@ -434,8 +432,8 @@ class DefaultTokenizer(Tokenizer):
         return text
 
     def after_tokenizer(self, wordfilters, words):
-        words = wordfilters.stopwords(self._lang, words)
-        words = wordfilters.stemming(self._lang, self._stemming, words)
+        words = wordfilters.stopwords(self.lang, words)
+        words = wordfilters.stemming(self.lang, self.stemming, words)
         words = wordfilters.normalize(words)
         return words
 
