@@ -5,20 +5,19 @@ Introduction
 
 A python module that allows you to create and manage a collection of occurrence counts of words without regard to grammar.
 
-Module contains two main classes ´´´DocumentClass´´´ and ´´´DocumentClassPool´´´
-and four secondary classes ´´´BagOfWords´´´ ´´´WordFilters´´´ ´´´TextFilters´´´ and ´´´Tokenizer´´´ 
-
-Secondary classes:
-
-*´´´BagOfWords´´´: Implementing a bag of words with their frequency of usages
-*´´´TextFilters´´´: Filters for transforming a text. It's used in Tokenizer class.
-*´´´WordFilters´´´: Filters for transforming a set of words. It's used in Tokenizer class.
-*´´´Tokenizer´´´: Allows to break a string into tokens (set of words). Optionally allows you to set filters before (TextFilters) and after (WordFilters) breaking the string into tokens.
+Module contains two main classes ```DocumentClass``` and ```DocumentClassPool``` and four secondary classes ```BagOfWords``` ```WordFilters``` ```TextFilters``` and ```Tokenizer``` 
 
 Main classes:
 
-*´´´DocumentClass´´´: Implementing a bag of words collection where all the bags of words are the same category. Retrieves the text of a file, folder, url or zip, and save or retrieve the collection in json format. This class uses secondary classes.
-*´´´DocumentClassPool´´´: soon
+*```DocumentClass```: Implementing a bag of words collection where all the bags of words are the same category. Retrieves the text of a file, folder, url or zip, and save or retrieve the collection in json format. This class uses secondary classes.
+*```DocumentClassPool```: soon
+
+Secondary classes:
+
+*```BagOfWords```: Implementing a bag of words with their frequency of usages.
+*```TextFilters```: Filters for transforming a text. It's used in Tokenizer class.
+*```WordFilters```: Filters for transforming a set of words. It's used in Tokenizer class.
+*```Tokenizer```: Allows to break a string into tokens (set of words). Optionally allows you to set filters before (TextFilters) and after (WordFilters) breaking the string into tokens.
 
 Key features:
 
