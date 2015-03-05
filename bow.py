@@ -8,7 +8,7 @@ import unicodedata
 from HTMLParser import HTMLParser
 from zipfile import ZipFile
 from json import JSONEncoder, JSONDecoder
-import json
+
 
 class BagOfWords(object):
 
@@ -154,18 +154,6 @@ class BagOfWords(object):
 
     def __call__(self, *args):
          self.add(self, *args)
-
-    def to_json(self):
-        """Convert dict to json string
-        :param other: BagOfWords, str or list
-        :return: BagOfWords"""
-        return json.dumps(self._bow, indent=1)
-
-    def from_json(self, data):
-        """Load dict from json string
-        :param data: json string
-        :return: nothing"""
-        self._bow = json.loads(data)
 
 
 class TextFilters(object):
@@ -354,6 +342,8 @@ class DocumentClass(Tokenizer):
         return self._category
 
     def to_json(self):
+        """Convert DocumentClass object to json string
+        :return: json"""
         class _Encoder(JSONEncoder):
 
             def default(self, obj):
@@ -368,11 +358,15 @@ class DocumentClass(Tokenizer):
 
         return _Encoder().encode(self)
 
-    def from_json(self, json_):
+    @staticmethod
+    def from_json(json_):
+        """Convert json string to DocumentClass object
+        :param json_: json string
+        :return: DocumentClass object"""
         class _Decoder(JSONDecoder):
 
             def __init__(self):
-                JSONDecoder.__init__(self, object_hook = self.dict_to_object)
+                JSONDecoder.__init__(self, object_hook=self.dict_to_object)
 
             def dict_to_object(self, d):
                 if '__class__' in d:
