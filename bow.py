@@ -278,7 +278,7 @@ class Tokenizer(object):
         return self.tokenizer(text)
 
 
-class DocumentClass(Tokenizer):
+class DocumentClass(BagOfWords, Tokenizer):
     """Implementing a bag of words collection where all the bags of words are the same
     category. Retrieves the text of a file, folder, url or zip, and save or retrieve
     the collection in json format.
@@ -286,22 +286,28 @@ class DocumentClass(Tokenizer):
 
     def __init__(self, category):
         Tokenizer.__init__(self)
+        BagOfWords.__init__(self)
         self.category = category
         self.docs = {}
-        self.total = BagOfWords()
+        self.numdocs = 0
 
-    def read_text(self, id, text):
+    def read_text(self, text, id_=None):
         """The text is stored in a BagOfWords identified by Id.
-        :param id: BagOfWord identifier
         :param text: text to add a BagOfWords
+        :param id_: Optional BagOfWord identifier. If it doesn't pass, it's assigned an
+        incremental number.
         :return: BagOfWords
         """
+        self.numdocs += 1
+        if id_:
+            if id_ in self.docs:
+                self.delete(dict(self.docs[id_]))
+        else:
+            id_ = self.numdocs
         words = self.tokenizer(text)
-        if id in self.docs:
-            self.total -= self.docs[id]
-        self.docs[id] = BagOfWords(words)
-        self.total.add(words)
-        return self.docs[id]
+        self.docs[id_] = BagOfWords(words)
+        self.add(words)
+        return self.docs[id_]
 
     def read_files(self, *filenames):
         """The contents of each file or files is stored in a BagOfWord identified by the filename.
@@ -312,7 +318,7 @@ class DocumentClass(Tokenizer):
         for filename in filenames:
             text = open(filename, 'r').read()
             text = text.decode('utf-8')
-            docs[filename] = self.read_text(filename, text)
+            docs[filename] = self.read_text(text=text, id_=filename)
         return docs
 
     def read_dir(self, path):
@@ -338,7 +344,7 @@ class DocumentClass(Tokenizer):
             req = urllib2.Request(url=url, headers=headers)
             text = urllib2.urlopen(req).read()
             text = text.decode('utf-8')
-            docs[url] = self.read_text(url, text)
+            docs[url] = self.read_text(text=text, id_=url)
         return docs
 
     def read_zips(self, *zipfilenames):
@@ -354,11 +360,11 @@ class DocumentClass(Tokenizer):
                 if input_file.file_size > 0:
                     text = input_zip.read(input_file)
                     text = text.decode('utf-8')
-                    docs[input_file.filename] = self.read_text(input_file.filename, text)
+                    docs[input_file.filename] = self.read_text(text=text, id_=input_file.filename)
         return docs
 
-    def __call__(self, id, text):
-        return self.read_text(id, text)
+    def __call__(self, text, id_=None):
+        return self.read_text(text, id_)
 
     def to_json(self):
         """Convert DocumentClass object to json string.
@@ -409,10 +415,10 @@ class DocumentClass(Tokenizer):
         return _Decoder().decode(json_)
 
 
-class DocumentClassPool(Object):
+class DocumentClassPool(object):
     """
     Pool of DocumentClass
-    """ 
+    """
     pass
 
 
