@@ -2,6 +2,7 @@
 __author__ = 'dmiro'
 import os
 import copy
+import uuid
 import urllib2
 import inspect
 import unicodedata
@@ -284,33 +285,38 @@ class DocumentClass(BagOfWords, Tokenizer):
     the collection in json format.
     """
 
-    def __init__(self, category):
+    def __init__(self, category, preservedocs=True):
         Tokenizer.__init__(self)
         BagOfWords.__init__(self)
         self.category = category
         self.docs = {}
         self.numdocs = 0
+        self.preservedocs = preservedocs
 
     def read_text(self, text, id_=None):
         """The text is stored in a BagOfWords identified by Id.
         :param text: text to add a BagOfWords
-        :param id_: Optional BagOfWord identifier. If it doesn't pass, it's assigned an
-        incremental number.
-        :return: BagOfWords
+        :param id_: BagOfWord identifier. Optional. If not set and preservedocs is true
+        then id_ is set an UUID4 identifier.
+        :return: (id, BagOfWords)
         """
-        self.numdocs += 1
-        if id_:
-            if id_ in self.docs:
+        words = self.tokenizer(text)
+        bow = BagOfWords(words)
+        if id_ in self.docs:
+            if self.preservedocs:
                 self.delete(dict(self.docs[id_]))
         else:
-            id_ = self.numdocs
-        words = self.tokenizer(text)
-        self.docs[id_] = BagOfWords(words)
+            self.numdocs += 1
+            if not id_:
+                id_ = uuid.uuid4().hex
+        if self.preservedocs:
+            self.docs[id_] = bow
         self.add(words)
-        return self.docs[id_]
+        return id_, bow
 
     def read_files(self, *filenames):
-        """The contents of each file or files is stored in a BagOfWord identified by the filename.
+        """The contents of each file or files is stored in a BagOfWord identified by the
+        filename.
         :param *filenames: filenames to add
         :return: BagOfWord dict
         """
@@ -465,14 +471,14 @@ class SimpleTokenizer(Tokenizer):
 class DefaultDocumentClass(DocumentClass, DefaultTokenizer):
     """DefaultTokenizer and DocumentClass subclass"""
 
-    def __init__(self, category, lang='english', stemming=1):
-        DocumentClass.__init__(self, category)
+    def __init__(self, category, preservedocs=True, lang='english', stemming=1):
+        DocumentClass.__init__(self, category, preservedocs)
         DefaultTokenizer.__init__(self, lang, stemming)
 
 
 class SimpleDocumentClass(DocumentClass, SimpleTokenizer):
     """SimpleTokenizer and DocumentClass subclass"""
 
-    def __init__(self, category):
-        DocumentClass.__init__(self, category)
+    def __init__(self, category, preservedocs=True):
+        DocumentClass.__init__(self, category, preservedocs)
         SimpleTokenizer.__init__(self)

@@ -241,21 +241,31 @@ class DocumentClassTest(TestCase):
 
     def test_default_document_class(self):
         dclass = DefaultDocumentClass('hello')
-        bow = dclass.read_text(text='hello a beautiful world!', id_='text one')
+        id_, bow = dclass.read_text(text='hello a beautiful world!', id_='text one')
+        self.assertEqual(id_, 'text one')
         self.assertEqual(bow, {u'world': 1, u'hello': 1, u'beauti': 1})
         #
         dclass = DefaultDocumentClass('hello')
         dclass('hello a beautiful world!', 'text one')
-        dclass('hello the Moon!', id_='text two')
-        dclass('hello the world!', id_='text one')
+        dclass('hello the Moon!', 'text two')
+        dclass('hello the world!', 'text one')
         self.assertEqual(dclass.docs, {'text two': {u'hello': 1, u'moon': 1}, 'text one': {u'world': 1, u'hello': 1}})
         self.assertEqual(dclass, {u'world': 1, u'hello': 2, u'moon': 1})
         self.assertEqual(dclass.numdocs, 2)
 
+    def test_preserver_docs_false(self):
+        dclass = DefaultDocumentClass(category='hello', preservedocs=False)
+        dclass('hello a beautiful world!')
+        dclass('hello the Moon!')
+        dclass('hello the world!')
+        self.assertEqual(dclass.docs, {})
+        self.assertEqual(dclass, {u'world': 2, u'hello': 3, u'beauti': 1, u'moon': 1})
+        self.assertEqual(dclass.numdocs, 3)
+
     def test_json(self):
-        dclass = DefaultDocumentClass('hello', 'spanish')
-        dclass.read_text('Hola mundo!')
-        dclass.read_text('Este es un bonito mundo')
+        dclass = DefaultDocumentClass(category='hello', lang='spanish')
+        dclass.read_text('Hola mundo!', id_='1')
+        dclass.read_text('Este es un bonito mundo', id_='2')
         json_ = dclass.to_json()
         dclass = DocumentClass.from_json(json_)
         self.assertEqual(dclass.__class__.__name__ , 'DefaultDocumentClass')
