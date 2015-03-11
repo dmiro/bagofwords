@@ -279,98 +279,111 @@ class Tokenizer(object):
         return self.tokenizer(text)
 
 
-class DocumentClass(BagOfWords, Tokenizer):
+class Document(BagOfWords, Tokenizer):
     """Implementing a bag of words collection where all the bags of words are the same
     category. Retrieves the text of a file, folder, url or zip, and save or retrieve
     the collection in json format.
     """
 
-    def __init__(self, category, preservedocs=True):
+    def __init__(self):
         Tokenizer.__init__(self)
         BagOfWords.__init__(self)
-        self.category = category
-        self.docs = {}
         self.numdocs = 0
-        self.preservedocs = preservedocs
 
-    def read_text(self, text, id_=None):
+    def _read(self, id_, text):
+        self.numdocs += 1
+        words = self.tokenizer(text)
+        self.add(words)
+
+    def read_text(self, text):
         """The text is stored in a BagOfWords identified by Id.
         :param text: text to add a BagOfWords
         :param id_: BagOfWord identifier. Optional. If not set and preservedocs is true
         then id_ is set an UUID4 identifier.
-        :return: (id, BagOfWords)
+        :return: nothing
         """
-        words = self.tokenizer(text)
-        bow = BagOfWords(words)
-        if id_ in self.docs:
-            if self.preservedocs:
-                self.delete(dict(self.docs[id_]))
-        else:
-            self.numdocs += 1
-            if not id_:
-                id_ = uuid.uuid4().hex
-        if self.preservedocs:
-            self.docs[id_] = bow
-        self.add(words)
-        return id_, bow
+        self._read(None, text)
 
     def read_files(self, *filenames):
         """The contents of each file or files is stored in a BagOfWord identified by the
         filename.
         :param *filenames: filenames to add
-        :return: BagOfWord dict
+        :return: nothing
         """
-        docs = {}
         for filename in filenames:
             text = open(filename, 'r').read()
             text = text.decode('utf-8')
-            docs[filename] = self.read_text(text=text, id_=filename)
-        return docs
+            self._read(filename, text)
 
     def read_dir(self, path):
         """The contents of each file o files of a directory is stored in a BagOfWord
         identified by the filename.
         :param path: directoy path to add files
-        :return: BagOfWord dict
+        :return: nothing
         """
         fn = []
         for (_, _, filenames) in os.walk(path):
             fn.extend([os.path.join(path,f) for f in filenames])
             break
-        return self.read_files(*fn)
+        self.read_files(*fn)
 
     def read_urls(self, *urls):
         """The contents of each url or urls is stored in a BagOfWord identified by the url.
         :param *urls: urls to add
-        :return: BagOfWord dict
+        :return: nothing
         """
-        docs = {}
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20140129 Firefox/24.0'}
         for url in urls:
             req = urllib2.Request(url=url, headers=headers)
             text = urllib2.urlopen(req).read()
             text = text.decode('utf-8')
-            docs[url] = self.read_text(text=text, id_=url)
-        return docs
+            self._read(url, text)
 
     def read_zips(self, *zipfilenames):
         """The contents of each file o files of a zip file is stored in a BagOfWord
         identified by the filename.
         :param *zipfilenames: zip files to add
-        :return: BagOfWord dict
+        :return: nothing
         """
-        docs = {}
         for zipfilename in zipfilenames:
             input_zip = ZipFile(zipfilename)
             for input_file in input_zip.infolist():
                 if input_file.file_size > 0:
                     text = input_zip.read(input_file)
                     text = text.decode('utf-8')
-                    docs[input_file.filename] = self.read_text(text=text, id_=input_file.filename)
-        return docs
+                    self._read(input_file.filename, text)
 
-    def __call__(self, text, id_=None):
-        return self.read_text(text, id_)
+    def __call__(self, text):
+        self.read_text(text)
+
+
+class DocumentClass(Document):
+    """Implementing a bag of words collection where all the bags of words are the same
+    category. Retrieves the text of a file, folder, url or zip, and save or retrieve
+    the collection in json format.
+    """
+
+    def __init__(self):
+        Document.__init__(self)
+        self.docs = {}
+
+    def _read(self, id_, text):
+        words = self.tokenizer(text)
+        bow = BagOfWords(words)
+        if not id_:
+            id_ = uuid.uuid4().hex
+        if id_ in self.docs:
+            self.delete(dict(self.docs[id_]))
+        else:
+            self.numdocs += 1
+        self.docs[id_] = bow
+        self.add(words)
+
+    def read_text(self, id_, text):
+        self._read(id_, text)
+      
+    def __call__(self, id_, text):
+        self.read_text(id_, text)
 
     def to_json(self):
         """Convert DocumentClass object to json string.
@@ -407,8 +420,8 @@ class DocumentClass(BagOfWords, Tokenizer):
                     module_name = d.pop('__module__')
                     module = __import__(module_name)
                     class_ = getattr(module, class_name)
-                    if issubclass(class_, DocumentClass):
-                        obj = class_(d.pop('category'))
+                    if issubclass(class_, Document):
+                        obj = class_()
                     elif issubclass(class_, BagOfWords):
                         obj = class_(d.pop('_bow'))
                     else:
@@ -419,13 +432,6 @@ class DocumentClass(BagOfWords, Tokenizer):
                 return d
 
         return _Decoder().decode(json_)
-
-
-class DocumentClassPool(object):
-    """
-    Pool of DocumentClass
-    """
-    pass
 
 
 class DefaultTokenizer(Tokenizer):
@@ -467,18 +473,59 @@ class SimpleTokenizer(Tokenizer):
         words = wordfilters.normalize(words)
         return words
 
+class DefaultDocument(Document, DefaultTokenizer):
+    """DefaultTokenizer and Document subclass"""
+
+    def __init__(self, lang='english', stemming=1):
+        Document.__init__(self)
+        DefaultTokenizer.__init__(self, lang, stemming)
+
+
+class SimpleDocument(Document, SimpleTokenizer):
+    """SimpleTokenizer and Document subclass"""
+
+    def __init__(self):
+        Document.__init__(self)
+        SimpleTokenizer.__init__(self)
 
 class DefaultDocumentClass(DocumentClass, DefaultTokenizer):
     """DefaultTokenizer and DocumentClass subclass"""
 
-    def __init__(self, category, preservedocs=True, lang='english', stemming=1):
-        DocumentClass.__init__(self, category, preservedocs)
+    def __init__(self, lang='english', stemming=1):
+        DocumentClass.__init__(self)
         DefaultTokenizer.__init__(self, lang, stemming)
 
 
 class SimpleDocumentClass(DocumentClass, SimpleTokenizer):
     """SimpleTokenizer and DocumentClass subclass"""
 
-    def __init__(self, category, preservedocs=True):
-        DocumentClass.__init__(self, category, preservedocs)
+    def __init__(self):
+        DocumentClass.__init__(self)
         SimpleTokenizer.__init__(self)
+
+
+def document_classifier(document, **classifieds):
+
+    print classifieds
+    
+    res = []
+    
+    for k, classified in classifieds.items():
+        prob = 0
+        for k, j in classifieds.items():
+            sum_j = j.num()
+            prod = 1
+            for i in document.keys():
+                wf_dclass = 1.0 + classified.freq(i)
+                wf = 1.0 + j.freq(i)
+                r = wf * classified.num() / (wf_dclass * sum_j)
+                prod *= r
+                prob += prod * j.numdocs / classified.numdocs
+        if prob != 0:
+            re = 1.0 / prob
+        else:
+            re = -1
+
+        res.append(re)
+
+    print res
