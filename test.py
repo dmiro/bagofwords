@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import unittest
 from unittest import TestCase
-from bow import BagOfWords, TextFilters, WordFilters, Tokenizer, SimpleTokenizer, DefaultTokenizer, DocumentClass, DefaultDocumentClass
+import bow
+from bow import BagOfWords, TextFilters, WordFilters, Tokenizer, SimpleTokenizer, DefaultTokenizer, DocumentClass, DefaultDocumentClass, DefaultDocument, SimpleDocument
 
 class BagOfWordsTest(TestCase):
 
@@ -240,12 +241,7 @@ class TokenizerTest(TestCase):
 class DocumentClassTest(TestCase):
 
     def test_default_document_class(self):
-        dclass = DefaultDocumentClass('hello')
-        id_, bow = dclass.read_text(text='hello a beautiful world!', id_='text one')
-        self.assertEqual(id_, 'text one')
-        self.assertEqual(bow, {u'world': 1, u'hello': 1, u'beauti': 1})
-        #
-        dclass = DefaultDocumentClass('hello')
+        dclass = DefaultDocumentClass()
         dclass('hello a beautiful world!', 'text one')
         dclass('hello the Moon!', 'text two')
         dclass('hello the world!', 'text one')
@@ -253,17 +249,16 @@ class DocumentClassTest(TestCase):
         self.assertEqual(dclass, {u'world': 1, u'hello': 2, u'moon': 1})
         self.assertEqual(dclass.numdocs, 2)
 
-    def test_preserver_docs_false(self):
-        dclass = DefaultDocumentClass(category='hello', preservedocs=False)
+    def test_default_document(self):
+        dclass = DefaultDocument()
         dclass('hello a beautiful world!')
         dclass('hello the Moon!')
         dclass('hello the world!')
-        self.assertEqual(dclass.docs, {})
         self.assertEqual(dclass, {u'world': 2, u'hello': 3, u'beauti': 1, u'moon': 1})
         self.assertEqual(dclass.numdocs, 3)
 
     def test_json(self):
-        dclass = DefaultDocumentClass(category='hello', lang='spanish')
+        dclass = DefaultDocumentClass(lang='spanish')
         dclass.read_text('Hola mundo!', id_='1')
         dclass.read_text('Este es un bonito mundo', id_='2')
         json_ = dclass.to_json()
@@ -271,10 +266,26 @@ class DocumentClassTest(TestCase):
         self.assertEqual(dclass.__class__.__name__ , 'DefaultDocumentClass')
         self.assertEqual(dclass.docs, {u'2': {u'mund': 1, u'bonit': 1}, u'1': {u'mund': 1, u'hol': 1}})
         self.assertEqual(dclass, {u'mund': 2, u'hol': 1, u'bonit': 1})
-        self.assertEqual(dclass.category, 'hello')
         self.assertEqual(dclass.numdocs, 2)
         self.assertEqual(dclass.lang, 'spanish')
         self.assertEqual(dclass.stemming, 1)
+
+class DocumentClassifierTest(TestCase):
+
+    def test_simple(self):
+        docnumbers = bow.SimpleDocument()
+        docnumbers('one two three four')
+        docnumbers('five six seven')
+        docanimals = bow.SimpleDocument()
+        docanimals('dog cat')
+        docanimals('horse frog')
+        docvehicles = bow.SimpleDocument()
+        docvehicles('truck car')
+        doc = bow.SimpleDocument()
+        doc('I am a cat')
+        result = bow.document_classifier(doc, numbers=docnumbers, animals=docanimals, vehicles=docvehicles)
+        self.assertEqual(result, [('vehicles', 0.14717420620326102), ('animals', 0.06196608769711204), ('numbers', 0.007284730521882648)])
+
 
 if __name__ == '__main__':
     unittest.main()

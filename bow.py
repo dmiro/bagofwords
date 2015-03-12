@@ -280,9 +280,9 @@ class Tokenizer(object):
 
 
 class Document(BagOfWords, Tokenizer):
-    """Implementing a bag of words collection where all the bags of words are the same
-    category. Retrieves the text of a file, folder, url or zip, and save or retrieve
-    the collection in json format.
+    """Implementing a bag of words where all words are of the same category. Retrieves
+    the text of a file, folder, url or zip, and also allows save or retrieve the Document
+    in json format.
     """
 
     def __init__(self):
@@ -298,8 +298,6 @@ class Document(BagOfWords, Tokenizer):
     def read_text(self, text):
         """The text is stored in a BagOfWords identified by Id.
         :param text: text to add a BagOfWords
-        :param id_: BagOfWord identifier. Optional. If not set and preservedocs is true
-        then id_ is set an UUID4 identifier.
         :return: nothing
         """
         self._read(None, text)
@@ -353,13 +351,62 @@ class Document(BagOfWords, Tokenizer):
                     text = text.decode('utf-8')
                     self._read(input_file.filename, text)
 
+    def to_json(self):
+        """Convert Document object to json string.
+        :return: json string
+        """
+        class _Encoder(JSONEncoder):
+
+            def default(self, obj):
+                if isinstance(obj, DocumentClass) or \
+                   isinstance(obj, BagOfWords):
+                    d = {'__class__': obj.__class__.__name__,
+                         '__module__':obj.__module__}
+                    d.update(obj.__dict__)
+                    return d
+                if not inspect.isfunction(obj):
+                    return super(_Encoder, self).default(obj)
+
+        return _Encoder().encode(self)
+
+    @staticmethod
+    def from_json(json_):
+        """Convert json string to Document object.
+        :param json_: json string
+        :return: Document object
+        """
+        class _Decoder(JSONDecoder):
+
+            def __init__(self):
+                JSONDecoder.__init__(self, object_hook=self.dict_to_object)
+
+            def dict_to_object(self, d):
+                if '__class__' in d:
+                    class_name = d.pop('__class__')
+                    module_name = d.pop('__module__')
+                    module = __import__(module_name)
+                    class_ = getattr(module, class_name)
+##                    if issubclass(class_, BagOfWords):
+##                        obj = class_(d.pop('_bow'))
+##                    else:
+##                        obj = class_()
+                    obj = class_()
+                    for k, v in d.iteritems():
+                        setattr(obj, k, v)
+                    return obj
+                return d
+
+        return _Decoder().decode(json_)
+
     def __call__(self, text):
         self.read_text(text)
 
 
 class DocumentClass(Document):
     """Implementing a bag of words collection where all the bags of words are the same
-    category. Retrieves the text of a file, folder, url or zip, and save or retrieve
+    category, as well as a bag of words with the entire collection of words. Each bag
+    of words has an identifier otherwise it's assigned an calculated identifier.
+    Retrieves the text of a file, folder, url or zip, and also allows save or retrieve
     the collection in json format.
     """
 
@@ -379,63 +426,21 @@ class DocumentClass(Document):
         self.docs[id_] = bow
         self.add(words)
 
-    def read_text(self, id_, text):
+    def read_text(self, text, id_=None):
+        """The text is stored in a BagOfWords identified by Id.
+        :param text: text to add a BagOfWords
+        :param id_: BagOfWord identifier. Optional. If not set then it's set an UUID4
+        identifier.
+        :return: nothing
+        """
         self._read(id_, text)
-      
-    def __call__(self, id_, text):
-        self.read_text(id_, text)
 
-    def to_json(self):
-        """Convert DocumentClass object to json string.
-        :return: json
-        """
-        class _Encoder(JSONEncoder):
-
-            def default(self, obj):
-                if isinstance(obj, DocumentClass) or \
-                   isinstance(obj, BagOfWords):
-                    d = {'__class__': obj.__class__.__name__,
-                         '__module__':obj.__module__}
-                    d.update(obj.__dict__)
-                    return d
-                if not inspect.isfunction(obj):
-                    return super(_Encoder, self).default(obj)
-
-        return _Encoder().encode(self)
-
-    @staticmethod
-    def from_json(json_):
-        """Convert json string to DocumentClass object.
-        :param json_: json string
-        :return: DocumentClass object
-        """
-        class _Decoder(JSONDecoder):
-
-            def __init__(self):
-                JSONDecoder.__init__(self, object_hook=self.dict_to_object)
-
-            def dict_to_object(self, d):
-                if '__class__' in d:
-                    class_name = d.pop('__class__')
-                    module_name = d.pop('__module__')
-                    module = __import__(module_name)
-                    class_ = getattr(module, class_name)
-                    if issubclass(class_, Document):
-                        obj = class_()
-                    elif issubclass(class_, BagOfWords):
-                        obj = class_(d.pop('_bow'))
-                    else:
-                        obj = class_()
-                    for k, v in d.iteritems():
-                        setattr(obj, k, v)
-                    return obj
-                return d
-
-        return _Decoder().decode(json_)
+    def __call__(self, text, id_=None):
+        self._read(id_, text)
 
 
 class DefaultTokenizer(Tokenizer):
-    """Tokenizer subclass that implements the text filters 'lower' and 'invalid_chars'
+    """Tokenizer subclass that implements the text filters 'lower', 'invalid_chars'
     and the word filters 'stopwords', 'stemming' and 'normalize'.
     """
 
@@ -457,7 +462,7 @@ class DefaultTokenizer(Tokenizer):
 
 
 class SimpleTokenizer(Tokenizer):
-    """Tokenizer subclass that implements the text filters 'lower' and 'invalid_chars'
+    """Tokenizer subclass that implements the text filters 'lower', 'invalid_chars'
     and the word filter 'normalize'.
     """
 
@@ -473,6 +478,21 @@ class SimpleTokenizer(Tokenizer):
         words = wordfilters.normalize(words)
         return words
 
+
+class HtmlTokenizer(DefaultTokenizer):
+    """Tokenizer subclass that implements the text filters 'htm_to_text', 'lower',
+    'invalid_chars' and the word filter 'normalize'.
+    """
+
+    def __init__(self, lang='english', stemming=1):
+         DefaultTokenizer.__init__(self, lang, stemming)
+
+    def before_tokenizer(self, textfilters, text):
+        text = textfilters.html_to_text(text)
+        text = DefaultTokenizer.before_tokenizer(self, textfilters, text)
+        return text
+
+
 class DefaultDocument(Document, DefaultTokenizer):
     """DefaultTokenizer and Document subclass"""
 
@@ -487,6 +507,15 @@ class SimpleDocument(Document, SimpleTokenizer):
     def __init__(self):
         Document.__init__(self)
         SimpleTokenizer.__init__(self)
+
+
+class HtmlDocument(Document, HtmlTokenizer):
+    """HtmlTokenizer and Document subclass"""
+
+    def __init__(self, lang='english', stemming=1):
+        Document.__init__(self)
+        HtmlTokenizer.__init__(self, lang, stemming)
+
 
 class DefaultDocumentClass(DocumentClass, DefaultTokenizer):
     """DefaultTokenizer and DocumentClass subclass"""
@@ -504,28 +533,32 @@ class SimpleDocumentClass(DocumentClass, SimpleTokenizer):
         SimpleTokenizer.__init__(self)
 
 
-def document_classifier(document, **classifieds):
+class HtmlDocumentClass(DocumentClass, HtmlTokenizer):
+    """HtmlTokenizer and DocumentClass subclass"""
 
-    print classifieds
-    
-    res = []
-    
-    for k, classified in classifieds.items():
+    def __init__(self, lang='english', stemming=1):
+        DocumentClass.__init__(self)
+        HtmlTokenizer.__init__(self, lang, stemming)
+
+
+def document_classifier(document, **classifieds):
+    """Document classifier"""
+
+    result = {}
+    for category, classified in classifieds.items():
         prob = 0
-        for k, j in classifieds.items():
-            sum_j = j.num()
+        for j in classifieds.values():
             prod = 1
             for i in document.keys():
                 wf_dclass = 1.0 + classified.freq(i)
                 wf = 1.0 + j.freq(i)
-                r = wf * classified.num() / (wf_dclass * sum_j)
+                r = wf * classified.num() / (wf_dclass * j.num())
                 prod *= r
                 prob += prod * j.numdocs / classified.numdocs
         if prob != 0:
             re = 1.0 / prob
         else:
             re = -1
+        result[category] = re
+    return sorted(result.items(), key=lambda t: t[1], reverse=True)
 
-        res.append(re)
-
-    print res
