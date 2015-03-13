@@ -3,6 +3,7 @@ __author__ = 'dmiro'
 import os
 import copy
 import uuid
+import math
 import urllib2
 import inspect
 import unicodedata
@@ -542,23 +543,27 @@ class HtmlDocumentClass(DocumentClass, HtmlTokenizer):
 
 
 def document_classifier(document, **classifieds):
-    """Document classifier"""
-
-    result = {}
-    for category, classified in classifieds.items():
-        prob = 0
-        for j in classifieds.values():
-            prod = 1
-            for i in document.keys():
-                wf_dclass = 1.0 + classified.freq(i)
-                wf = 1.0 + j.freq(i)
-                r = wf * classified.num() / (wf_dclass * j.num())
-                prod *= r
-                prob += prod * j.numdocs / classified.numdocs
-        if prob != 0:
-            re = 1.0 / prob
-        else:
-            re = -1
-        result[category] = re
-    return sorted(result.items(), key=lambda t: t[1], reverse=True)
-
+    """Text classification based on an implementation of Naive Bayes
+    :param document: document class instance to classify.
+    :param classifieds: dictionary with Document class instances have already been classified.
+    :return: list sorted from highest to lowest probability.
+    """
+    # http://blog.yhathq.com/posts/naive-bayes-in-python.html
+    res = {}
+    total_docs = SimpleDocument()
+    for classified in classifieds.values():
+        total_docs += classified
+    for k_classified, classified in classifieds.items():
+        prior = float(classified.num()) / float(total_docs.num())
+        log_prob = 0.0
+        for word, value in document.items():
+            if word in total_docs:
+                if classified.rate(word) > 0.0:
+                    # log(probability) it requires fewer decimal places
+                    log_prob += math.log(value * classified.rate(word) / total_docs.rate(word))
+        # log space to regular space
+        exp_prob = math.exp(log_prob + math.log(prior))
+        res[k_classified] = exp_prob
+    total = sum(res.values())
+    res = [(k,v/total) for k, v in res.items()]
+    return sorted(res, key=lambda t: t[1], reverse=True)

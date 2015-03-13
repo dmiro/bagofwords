@@ -279,12 +279,19 @@ class DocumentClassifierTest(TestCase):
         docanimals = bow.SimpleDocument()
         docanimals('dog cat')
         docanimals('horse frog')
+        docanimals('dog cat')
+        docanimals('dog cat')
+        docanimals('dog cat')
         docvehicles = bow.SimpleDocument()
         docvehicles('truck car')
         doc = bow.SimpleDocument()
         doc('I am a cat')
         result = bow.document_classifier(doc, numbers=docnumbers, animals=docanimals, vehicles=docvehicles)
-        self.assertEqual(result, [('vehicles', 0.14717420620326102), ('animals', 0.06196608769711204), ('numbers', 0.007284730521882648)])
+        self.assertEqual(result, [('animals', 0.6785714285714286), ('numbers', 0.25), ('vehicles', 0.07142857142857142)])
+        doc.clear()
+        doc('one dog, one cat, three trucks')
+        result = bow.document_classifier(doc, numbers=docnumbers, animals=docanimals, vehicles=docvehicles)
+        self.assertEqual(result, [('numbers', 0.7302518458581976), ('animals', 0.2555881460503691), ('vehicles', 0.014160008091433189)])
 
 
 if __name__ == '__main__':
