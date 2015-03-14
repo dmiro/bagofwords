@@ -7,6 +7,14 @@ A Python module that allows you to create and manage a collection of occurrence 
 
 You can make use via **API** or via **Command Line**. For example, you can generate your classified documents (*learn*) via Command Line and after via API classify an input document.
 
+##### Third parties modules
+
+Module uses two third parties modules:
+
+* [stop_words] (https://github.com/Alir3z4/python-stop-words)
+* [pystemmer] (https://github.com/snowballstem/pystemmer)
+
+The first module is used in **stop_words filter**, the second module is used in **stemming filter**. If you don't use these two filters, you don't need install them.
 
 Installation
 ------------
@@ -40,20 +48,33 @@ Module contains two main classes `DocumentClass` and `Document` and four seconda
 
 * `BagOfWords` Implementing a bag of words with their frequency of usages.
 * `TextFilters` Filters for transforming a text. It's used in Tokenizer class. Including filters `upper` `lower` `invalid_chars` and `html_to_text`
-* `WordFilters` Filters for transforming a set of words. It's used in Tokenizer class. Including filters: `stemming` `stopwords` and `normalize`
+* `WordFilters` Filters for transforming a set of words. It's used in Tokenizer class. Including filters `stemming` `stopwords` and `normalize`
 * `Tokenizer` Allows to break a string into tokens (set of words). Optionally allows you to set filters before (TextFilters) and after (WordFilters) breaking the string into tokens.
 
-##### Third parties modules
 
-The module uses two third parties modules:
+##### Examples
 
-* [stop_words] (https://github.com/Alir3z4/python-stop-words)
-* [] ()
+1. Join several bag of words
 
-The first module is used in **stop_words filter**, the second module is used in **stemming filter**. If you don't use these two filters, you don't need install them.
+```
+from bow import BagOfWords
 
-Example Tokenizer Class
-*******
+a = BagOfWords('car', 'chair', 'chicken')
+b = BagOfWords({'chicken':2}, ['eye', 'ugly'])
+c = BagOfWords('plane')
+
+print a + b + c
+print a - b - c
+```
+
+**Result**
+
+```
+{'eye': 1, 'car': 1, 'ugly': 1, 'plane': 1, 'chair': 1, 'chicken': 3}
+{'car': 1, 'chair': 1}
+```
+
+2. HTML document class
 
 ```
 from bow import HtmlDocumentClass
@@ -103,7 +124,7 @@ print 'total >>\n', dclass
 print 'rates >>\n', dclass.rates()
 ```
 
-Result
+**Result**
 
 ```
 >>> 
