@@ -1,5 +1,7 @@
 # bagofwords
 
+[![Build Status](https://travis-ci.org/dmiro/bagofwords.svg)](https://travis-ci.org/dmiro/bagofwords)
+
 Introduction
 ------------
 
@@ -58,7 +60,7 @@ Module contains two main classes `DocumentClass` and `Document` and four seconda
 
 ##### Examples
 
-1. Join several bag of words
+**Join several bag of words**
 
 ```
 from bow import BagOfWords
@@ -78,7 +80,7 @@ Result
 {'car': 1, 'chair': 1}
 ```
 
-2. HTML document class
+**HTML document class**
 
 ```
 from bow import HtmlDocumentClass

@@ -24,7 +24,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Scientific/Engineering :: Information Analysis',
         ],
-##    py_modules=['client'],
+    py_modules=['bow'],
 ##    entry_points = {
 ##        'console_scripts': ['client = client:main']
 ##        },
