@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-__author__ = 'dmiro'
 import os
 import copy
 import uuid
@@ -10,6 +9,10 @@ import unicodedata
 from HTMLParser import HTMLParser
 from zipfile import ZipFile
 from json import JSONEncoder, JSONDecoder
+
+__author__ = 'dmiro'
+__version_info__ = (2015, 3, 15)
+__version__ = '.'.join(str(v) for v in __version_info__)
 
 
 class BagOfWords(object):

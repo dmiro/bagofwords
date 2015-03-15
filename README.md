@@ -19,17 +19,22 @@ The first module is used in **stop_words filter**, the second module is used in 
 Installation
 ------------
 
-```
- $ [sudo] pip install .... soon!
-```
+ Install it via `pip`
+
+`$ [sudo] pip install .... soon!`
+
+Or download zip and then install it by running:
+
+`$  [sudo] python setup.py install `
+
+You can test it by running:
+
+`$  [sudo] python setup.py test `
 
 Uninstallation
 --------------
 
-```
- $ [sudo] pip uninstall .... soon!
-```
-
+`$ [sudo] pip uninstall .... soon!`
 
 Python API
 ----------
@@ -49,8 +54,7 @@ Module contains two main classes `DocumentClass` and `Document` and four seconda
 * `BagOfWords` Implementing a bag of words with their frequency of usages.
 * `TextFilters` Filters for transforming a text. It's used in Tokenizer class. Including filters `upper` `lower` `invalid_chars` and `html_to_text`
 * `WordFilters` Filters for transforming a set of words. It's used in Tokenizer class. Including filters `stemming` `stopwords` and `normalize`
-* `Tokenizer` Allows to break a string into tokens (set of words). Optionally allows you to set filters before (TextFilters) and after (WordFilters) breaking the string into tokens.
-
+* `Tokenizer` Allows to break a string into tokens (set of words). Optionally allows you to set filters before (TextFilters) and after (WordFilters) breaking the string into tokens. There are three Tokenizer subclasses `DefaultTokenizer` `SimpleTokenizer` and `HtmlTokenizer` that implements the more common filters and overwriting after_tokenizer and berofe_tokenizer methods
 
 ##### Examples
 
@@ -67,7 +71,7 @@ print a + b + c
 print a - b - c
 ```
 
-**Result**
+Result
 
 ```
 {'eye': 1, 'car': 1, 'ugly': 1, 'plane': 1, 'chair': 1, 'chicken': 3}
@@ -124,7 +128,7 @@ print 'total >>\n', dclass
 print 'rates >>\n', dclass.rates()
 ```
 
-**Result**
+Result
 
 ```
 >>> 
