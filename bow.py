@@ -48,14 +48,29 @@ class BagOfWords(object):
         """
         self.__calc(lambda x,y: x-y, *args)
 
+    @property
     def rates(self):
-        """Rate of occurrences"""
+        """Rate of occurrences
+        :return: Dict
+        """
         total = float(self.num())
         if total:
             return {k:v/total for k, v in self._bow.iteritems()}
         else:
             return {}
-
+        
+    @property
+    def sorted_rates(self):
+        """Sorted rate of occurrences
+        :return: list sorted from greater to lowest rate
+        """
+        total = float(self.num())
+        if total:
+            res = [(k,v/total) for k, v in self._bow.iteritems()]
+            return sorted(res, key=lambda t: t[1], reverse=True)
+        else:
+            return []
+        
     def freq(self, word):
         """Frequency of a word.
         :param word: word to query
@@ -78,7 +93,8 @@ class BagOfWords(object):
             return 0
 
     def __add__(self, other):
-        """ Overloading of "+" operator to join BagOfWord+BagOfWord, BagOfWords+str or BagOfWords+list.
+        """ Overloading of "+" operator to join BagOfWord+BagOfWord, BagOfWords+str or
+        BagOfWords+list.
         :param other: BagOfWords, str or list
         :return: BagOfWords
         """
@@ -90,7 +106,8 @@ class BagOfWords(object):
         return result
 
     def __sub__(self, other):
-        """ Overloading of "-" operator to join BagOfWord+BagOfWord, BagOfWords+str or BagOfWords+list.
+        """ Overloading of "-" operator to join BagOfWord+BagOfWord, BagOfWords+str or
+        BagOfWords+list.
         :param other: BagOfWords, str or list
         :return: BagOfWords
         """
@@ -401,6 +418,25 @@ class Document(BagOfWords, Tokenizer):
                 return d
 
         return _Decoder().decode(json_)
+
+    def save(self, filename):
+        """Serialize Documentand save to a file in json format
+        :filename: file to save
+        :return: nothing
+        """
+        with open(filename, 'w') as f:
+            json_ = self.to_json()
+            f.write(json_)
+
+    @staticmethod
+    def load(filename):
+        """Load and deserialize Document from file saved in json format
+        :filename: file to load
+        :return: nothing
+        """
+        with open(filename, 'r') as f:
+            json_ = f.read()
+            return Document.from_json(json_)
 
     def __call__(self, text):
         self.read_text(text)

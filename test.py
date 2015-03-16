@@ -139,8 +139,9 @@ class BagOfWordsTest(TestCase):
         self.assertEqual('car' in self.bow, True)
 
     def test_rate(self):
-        self.bow.add(['a','a','a','b'])
-        self.assertEqual(self.bow.rates(), {'a':0.75, 'b':0.25})
+        self.bow.add(['b','a','a','a'])
+        self.assertEqual(self.bow.rates, {'a':0.75, 'b':0.25})
+        self.assertEqual(self.bow.sorted_rates, [('a', 0.75), ('b', 0.25)])  
         self.assertEqual(self.bow.rate('a'), 0.75)
         self.assertEqual(self.bow.rate('b'), 0.25)
         self.assertEqual(self.bow.rate('c'), 0)

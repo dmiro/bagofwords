@@ -9,9 +9,9 @@ A Python module that allows you to create and manage a collection of occurrence 
 
 You can make use via **API** or via **Command Line**. For example, you can generate your classified documents (*learn*) via Command Line and after via API classify an input document.
 
-##### Third parties modules
+#### Third parties modules
 
-Module uses two third parties modules:
+Module uses two third parties modules
 
 * [stop_words] (https://github.com/Alir3z4/python-stop-words)
 * [pystemmer] (https://github.com/snowballstem/pystemmer)
@@ -25,13 +25,13 @@ Installation
 
 `$ [sudo] pip install .... soon!`
 
-Or download zip and then install it by running:
+Or download zip and then install it by running
 
-`$  [sudo] python setup.py install `
+`$  [sudo] python setup.py install`
 
-You can test it by running:
+You can test it by running
 
-`$  [sudo] python setup.py test `
+`$  [sudo] python setup.py test`
 
 Uninstallation
 --------------
@@ -45,20 +45,20 @@ This module requires Python 2.7+
 
 Module contains two main classes `DocumentClass` and `Document` and four secondary classes `BagOfWords`, `WordFilters`, `TextFilters` and `Tokenizer`
 
-##### Main classes
+#### Main classes
 
 * `DocumentClass` Implementing a bag of words collection where all the bags of words are the same category, as well as a bag of words with the entire collection of words. Each bag of words has an identifier otherwise it's assigned an calculated identifier. Retrieves the text of a file, folder, url or zip, and also allows save or retrieve
     the collection in json format.
 * `Document` Implementing a bag of words where all words are of the same category. Retrieves the text of a file, folder, url or zip, and also allows save or retrieve the Document in json format.
 
-##### Secondary classes
+#### Secondary classes
 
 * `BagOfWords` Implementing a bag of words with their frequency of usages.
 * `TextFilters` Filters for transforming a text. It's used in Tokenizer class. Including filters `upper` `lower` `invalid_chars` and `html_to_text`
 * `WordFilters` Filters for transforming a set of words. It's used in Tokenizer class. Including filters `stemming` `stopwords` and `normalize`
 * `Tokenizer` Allows to break a string into tokens (set of words). Optionally allows you to set filters before (TextFilters) and after (WordFilters) breaking the string into tokens. There are three Tokenizer subclasses `DefaultTokenizer` `SimpleTokenizer` and `HtmlTokenizer` that implements the more common filters and overwriting after_tokenizer and berofe_tokenizer methods
 
-##### Examples
+#### Examples
 
 **Join several bag of words**
 
