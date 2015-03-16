@@ -3,6 +3,7 @@ import unittest
 from unittest import TestCase
 import bow
 from bow import BagOfWords, TextFilters, WordFilters, Tokenizer, SimpleTokenizer, DefaultTokenizer, DocumentClass, DefaultDocumentClass, DefaultDocument, SimpleDocument
+import mock
 
 class BagOfWordsTest(TestCase):
 
@@ -294,6 +295,27 @@ class DocumentClassifierTest(TestCase):
         result = bow.document_classifier(doc, numbers=docnumbers, animals=docanimals, vehicles=docvehicles)
         self.assertEqual(result, [('numbers', 0.7302518458581976), ('animals', 0.2555881460503691), ('vehicles', 0.014160008091433189)])
 
+    def test_save_document(self):
+        m = mock.mock_open()
+        with mock.patch('bow.open', m, create=True): 
+            docnumbers = bow.SimpleDocument()
+            docnumbers('one two three four')
+            docnumbers('one two three')
+            docnumbers.save('test.dat')
+        #print m.mock_calls
+        m.assert_called_once_with('test.dat','w')
+        handle = m()
+        data = '{"__module__": "bow", "numdocs": 2, "__class__": "SimpleDocument", "_bow": {"four": 1, "three": 2, "two": 2, "one": 2}}'
+        handle.write.assert_called_once_with(data)
 
+    def test_load_document(self):
+        m = mock.mock_open()
+        data = '{"__module__": "bow", "numdocs": 2, "__class__": "SimpleDocument", "_bow": {"four": 1, "three": 2, "two": 2, "one": 2}}'
+        with mock.patch('bow.open', mock.mock_open(read_data=data), create=True) as m:
+            docnumbers = SimpleDocument.load('test.dat')
+        m.assert_called_once_with('test.dat','r')
+        self.assertEqual(docnumbers, {u'four': 1, u'one': 2, u'three': 2, u'two': 2})
+        
+       
 if __name__ == '__main__':
     unittest.main()
