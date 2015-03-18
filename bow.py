@@ -5,6 +5,7 @@ import uuid
 import math
 import urllib2
 import inspect
+import argparse
 import unicodedata
 from HTMLParser import HTMLParser
 from zipfile import ZipFile
@@ -58,7 +59,7 @@ class BagOfWords(object):
             return {k:v/total for k, v in self._bow.iteritems()}
         else:
             return {}
-        
+
     @property
     def sorted_rates(self):
         """Sorted rate of occurrences
@@ -70,7 +71,7 @@ class BagOfWords(object):
             return sorted(res, key=lambda t: t[1], reverse=True)
         else:
             return []
-        
+
     def freq(self, word):
         """Frequency of a word.
         :param word: word to query
@@ -312,6 +313,10 @@ class Document(BagOfWords, Tokenizer):
         self.numdocs = 0
 
     def _read(self, id_, text):
+        try:
+            text = unicode(text, 'utf-8')
+        except UnicodeError:
+            text = unicode(text, 'latin-1')
         self.numdocs += 1
         words = self.tokenizer(text)
         self.add(words)
@@ -331,7 +336,6 @@ class Document(BagOfWords, Tokenizer):
         """
         for filename in filenames:
             text = open(filename, 'r').read()
-            text = text.decode('utf-8')
             self._read(filename, text)
 
     def read_dir(self, path):
@@ -355,7 +359,6 @@ class Document(BagOfWords, Tokenizer):
         for url in urls:
             req = urllib2.Request(url=url, headers=headers)
             text = urllib2.urlopen(req).read()
-            text = text.decode('utf-8')
             self._read(url, text)
 
     def read_zips(self, *zipfilenames):
@@ -369,7 +372,6 @@ class Document(BagOfWords, Tokenizer):
             for input_file in input_zip.infolist():
                 if input_file.file_size > 0:
                     text = input_zip.read(input_file)
-                    text = text.decode('utf-8')
                     self._read(input_file.filename, text)
 
     def to_json(self):
@@ -455,6 +457,10 @@ class DocumentClass(Document):
         self.docs = {}
 
     def _read(self, id_, text):
+        try:
+            text = unicode(text, 'utf-8')
+        except UnicodeError:
+            text = unicode(text, 'latin-1')
         words = self.tokenizer(text)
         bow = BagOfWords(words)
         if not id_:
@@ -606,3 +612,72 @@ def document_classifier(document, **classifieds):
     total = sum(res.values())
     res = [(k,v/total) for k, v in res.items()]
     return sorted(res, key=lambda t: t[1], reverse=True)
+
+
+def learn(args):
+
+    # read document class
+    if args.filename and not args.rewrite:
+        pass
+
+    # document instance. Si lees de fichero la clase, no tiene mucho sentido. Creo q lo mejor es meter otro subcommand...
+    if args.filter == 'text':
+        dc = DefaultDocument(lang=args.lang_filter, stemming=args.stemming_filter)
+    if args.filter == 'html':
+        dc = HtmlDocument(lang=args.lang_filter, stemming=args.stemming_filter)
+
+    # read documents
+    if args.url:
+        dc.read_urls(*args.url)
+    if args.dir:
+        dc.read_dir(args.dir)
+    if args.file:
+        dc.read_files(*args.file)
+    if args.zip:
+        dc.read_zips(*args.zip)
+
+    print 'total number of processed *words*:', dc.num()
+    print 'total number of processed *docs*:', dc.numdocs
+
+##    print 'learn:',args
+##    print dc
+##    print dc.sorted_rates[0:20]
+##    print dc.numdocs
+
+
+def classify(args):
+    pass
+
+
+def main():
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--version', action='version', version=__version__, help='show version and exit')
+    subparsers = parser.add_subparsers(help='')
+
+    parser_learn = subparsers.add_parser('learn', help='a help')
+    parser_learn.add_argument('filter', choices=['text', 'html'], help='tipo de filtro')
+    parser_learn.add_argument('filename', help='filename')
+    parser_learn.add_argument('--rewrite', action='store_true', help='rewrite')
+    parser_learn.add_argument('--lang-filter', default='english', type=str, help='___')
+    parser_learn.add_argument('--stemming-filter', default=1, type=int, help='___')
+    parser_learn.add_argument('--file', nargs='+', help='files')
+    parser_learn.add_argument('--dir', help='dir')
+    parser_learn.add_argument('--url', nargs='+', help='urls')
+    parser_learn.add_argument('--zip', nargs='+', help='zips')
+    parser_learn.set_defaults(func=learn)
+
+    parser_classify = subparsers.add_parser('classify', help='b help')
+    parser_classify.add_argument('classifiers', nargs='+', help='classifiers')
+    parser_classify.add_argument('filter', choices=['text', 'html'], help='tipo de filtro')
+    parser_classify.add_argument('--lang-filter', default='english', type=str, help='___')
+    parser_classify.add_argument('--stemming-filter', default=1, type=int, help='___')
+    parser_classify.add_argument('--file', help='files')
+    parser_classify.add_argument('--url', help='urls')
+    parser_classify.set_defaults(func=classify)
+
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == '__main__':
+	main()
