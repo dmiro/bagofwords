@@ -614,35 +614,55 @@ def document_classifier(document, **classifieds):
     return sorted(res, key=lambda t: t[1], reverse=True)
 
 
-def learn(args):
+def show_document(document, filename, verbose):
+    print '* filename: %s' % filename
+    print '* filter:'
+    print '    type: %s' % document.__class__.__name__
+    print '    lang: %s' % document.lang
+    print '    stemming: %s' % document.stemming
+    print '* total words: %d' % document.num()
+    print '* total docs: %d' % document.numdocs
+    if verbose:    
+        print '*','words'.ljust(20),'|','occurrences'.rjust(20),'|','rate'.rjust(20)
+        print ' ','-'*20,'|','-'*20,'|','-'*20
+        for word, rate in document.sorted_rates[0:40]:
+            print ' ',word.encode('utf-8').ljust(20),'|',str(document[word]).rjust(20),'|',('%.15f' % rate).rjust(20)
 
-    # read document class
-    if args.filename and not args.rewrite:
-        pass
 
-    # document instance. Si lees de fichero la clase, no tiene mucho sentido. Creo q lo mejor es meter otro subcommand...
+def show(args):
+    try:
+        dc = Document.load(args.filename)
+        show_document(document=dc, filename=args.filename, verbose=True)
+    except IOError:
+        print 'No such classifier: %s' % args.filename
+
+
+def create(args):
     if args.filter == 'text':
         dc = DefaultDocument(lang=args.lang_filter, stemming=args.stemming_filter)
     if args.filter == 'html':
         dc = HtmlDocument(lang=args.lang_filter, stemming=args.stemming_filter)
+    dc.save(args.filename)
+    show(args)
 
-    # read documents
-    if args.url:
-        dc.read_urls(*args.url)
-    if args.dir:
-        dc.read_dir(args.dir)
-    if args.file:
-        dc.read_files(*args.file)
-    if args.zip:
-        dc.read_zips(*args.zip)
 
-    print 'total number of processed *words*:', dc.num()
-    print 'total number of processed *docs*:', dc.numdocs
-
-##    print 'learn:',args
-##    print dc
-##    print dc.sorted_rates[0:20]
-##    print dc.numdocs
+def learn(args):
+    try:
+        dc = Document.load(args.filename)
+        show_document(document=dc, filename=args.filename, verbose=False)
+        print '--------------------'
+        if args.url:
+            dc.read_urls(*args.url)
+        if args.dir:
+            dc.read_dir(args.dir)
+        if args.file:
+            dc.read_files(*args.file)
+        if args.zip:
+            dc.read_zips(*args.zip)
+        dc.save(args.filename)
+        show_document(document=dc, filename=args.filename, verbose=True)
+    except IOError:
+        print 'No such classifier: %s' % args.filename
 
 
 def classify(args):
@@ -654,17 +674,26 @@ def main():
     parser.add_argument('--version', action='version', version=__version__, help='show version and exit')
     subparsers = parser.add_subparsers(help='')
 
+    parser_create = subparsers.add_parser('create', help='a help')
+    parser_create.add_argument('filter', choices=['text', 'html'], help='tipo de filtro')
+    parser_create.add_argument('filename', help='filename')
+    parser_create.add_argument('--lang-filter', default='english', type=str, help='___')
+    parser_create.add_argument('--stemming-filter', default=1, type=int, help='___')
+    parser_create.add_argument('--rewrite', action='store_true', default=False, help='rewrite')
+    parser_create.set_defaults(func=create)
+ 
     parser_learn = subparsers.add_parser('learn', help='a help')
-    parser_learn.add_argument('filter', choices=['text', 'html'], help='tipo de filtro')
     parser_learn.add_argument('filename', help='filename')
-    parser_learn.add_argument('--rewrite', action='store_true', help='rewrite')
-    parser_learn.add_argument('--lang-filter', default='english', type=str, help='___')
-    parser_learn.add_argument('--stemming-filter', default=1, type=int, help='___')
     parser_learn.add_argument('--file', nargs='+', help='files')
     parser_learn.add_argument('--dir', help='dir')
     parser_learn.add_argument('--url', nargs='+', help='urls')
     parser_learn.add_argument('--zip', nargs='+', help='zips')
+    parser_learn.add_argument('--rewrite', action='store_true', default=False, help='rewrite')
     parser_learn.set_defaults(func=learn)
+
+    parser_show = subparsers.add_parser('show', help='a help')
+    parser_show.add_argument('filename', help='filename')
+    parser_show.set_defaults(func=show)
 
     parser_classify = subparsers.add_parser('classify', help='b help')
     parser_classify.add_argument('classifiers', nargs='+', help='classifiers')
