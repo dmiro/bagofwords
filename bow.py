@@ -343,17 +343,18 @@ class Document(BagOfWords, Tokenizer):
             text = open(filename, 'r').read()
             self._read(filename, text)
 
-    def read_dir(self, path):
+    def read_dir(self, *paths):
         """The contents of each file o files of a directory is stored in a BagOfWord
         identified by the filename.
-        :param path: directoy path to add files
+        :param paths: directory or directories path to add files
         :return: nothing
         """
-        fn = []
-        for (_, _, filenames) in os.walk(path):
-            fn.extend([os.path.join(path,f) for f in filenames])
-            break
-        self.read_files(*fn)
+        for path in paths:
+            fn = []
+            for (_, _, filenames) in os.walk(path):
+                fn.extend([os.path.join(path,f) for f in filenames])
+                break
+            self.read_files(*fn)
 
     def read_urls(self, *urls):
         """The contents of each url or urls is stored in a BagOfWord identified by the url.
@@ -476,6 +477,11 @@ class DocumentClass(Document):
             self.numdocs += 1
         self.docs[id_] = bow
         self.add(words)
+
+    def clear(self):
+        """Clear word and docs list."""
+        Document.clear(self)
+        self.docs = {}
 
     def read_text(self, text, id_=None):
         """The text is stored in a BagOfWords identified by Id.
@@ -619,7 +625,7 @@ def document_classifier(document, **classifieds):
     return sorted(res, key=lambda t: t[1], reverse=True)
 
 
-def show_document(document, filename, verbose):
+def _show_document(document, filename, verbose, top=50):
     print '* filename: %s' % filename
     print '* filter:'
     print '    type: %s' % document.__class__.__name__
@@ -628,88 +634,118 @@ def show_document(document, filename, verbose):
     print '* total words: %d' % document.num()
     print '* total docs: %d' % document.numdocs
     if verbose:
-        print '*','words'.ljust(20),'|','occurrences'.rjust(20),'|','rate'.rjust(20)
-        print ' ','-'*20,'|','-'*20,'|','-'*20
-        for word, rate in document.sorted_rates[0:40]:
-            print ' ',word.encode('utf-8').ljust(20),'|',str(document[word]).rjust(20),'|',('%.15f' % rate).rjust(20)
+        if top:
+            words = 'word (top %d)' % top
+            rates = document.sorted_rates[0:top]
+        else:
+            words = 'word'
+            rates = document.sorted_rates
+        posadj = len(str(len(rates)))+1
+        print '*','pos'.rjust(posadj),'|',words.ljust(35),'|','occurrence'.rjust(10),'|','rate'.rjust(10)
+        print ' ','-'*posadj,'|','-'*35,'|','-'*10,'|','-'*10
+        for word, rate in rates:
+            print ' ',str(rates.index((word, rate))+1).rjust(posadj),'|',word.encode('utf-8').ljust(35),'|',\
+                  str(document[word]).rjust(10),'|',('%.8f' % rate).rjust(10)
 
 
-def show(args):
+def _show(args):
     try:
         dc = Document.load(args.filename)
-        show_document(document=dc, filename=args.filename, verbose=True)
+        _show_document(document=dc, filename=args.filename, verbose=True, top=args.list_top_words)
     except IOError:
         print 'No such classifier: %s' % args.filename
 
 
-def create(args):
-    if args.filter == 'text':
-        dc = DefaultDocument(lang=args.lang_filter, stemming=args.stemming_filter)
+def _create(args):
     if args.filter == 'html':
         dc = HtmlDocument(lang=args.lang_filter, stemming=args.stemming_filter)
+    else:
+        dc = DefaultDocument(lang=args.lang_filter, stemming=args.stemming_filter)
     dc.save(args.filename)
-    show(args)
+    _show_document(document=dc, filename=args.filename, verbose=False)
 
 
-def learn(args):
+def _learn(args):
     try:
         dc = Document.load(args.filename)
         if args.rewrite:
             dc.clear()
-        show_document(document=dc, filename=args.filename, verbose=False)
-        print '--------------------'
+        print '\ncurrent'
+        print '======='
+        _show_document(document=dc, filename=args.filename, verbose=False)
+        print '\nupdated'
+        print '======='
         if args.url:
             dc.read_urls(*args.url)
         if args.dir:
-            dc.read_dir(args.dir)
+            dc.read_dir(*args.dirs)
         if args.file:
             dc.read_files(*args.file)
         if args.zip:
             dc.read_zips(*args.zip)
-        dc.save(args.filename)
-        show_document(document=dc, filename=args.filename, verbose=True)
+        if not args.no_learn:
+            dc.save(args.filename)
+        _show_document(document=dc, filename=args.filename, verbose=True, top=args.list_top_words)
     except IOError:
         print 'No such classifier: %s' % args.filename
 
 
-def classify(args):
-    pass
+def _classify(args):
+    dclist = {}
+    for filename in args.classifiers:
+        dc = Document.load(filename)
+        dclist[filename] = dc
+    if args.filter == 'html':
+        dc = HtmlDocument(lang=args.lang_filter, stemming=args.stemming_filter)
+    else:
+        dc = DefaultDocument(lang=args.lang_filter, stemming=args.stemming_filter)
+    if args.url:
+        dc.read_urls(args.url)
+    elif args.file:
+        dc.read_files(args.file)
+    result = document_classifier(dc, **dclist)
+    print '*','classifier'.ljust(35),'|','rate'.rjust(10)
+    print ' ','-'*35,'|','-'*10
+    for classifier, rate in result:
+        print ' ',classifier.encode('utf-8').ljust(35),'|',('%.8f' % rate).rjust(10)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='')
+    parser = argparse.ArgumentParser(description='', epilog="see at .. for more info")
     parser.add_argument('--version', action='version', version=__version__, help='show version and exit')
     subparsers = parser.add_subparsers(help='')
-
+    # create command
     parser_create = subparsers.add_parser('create', help='a help')
     parser_create.add_argument('filter', choices=['text', 'html'], help='tipo de filtro')
     parser_create.add_argument('filename', help='filename')
     parser_create.add_argument('--lang-filter', default='english', type=str, help='___')
     parser_create.add_argument('--stemming-filter', default=1, type=int, help='___')
-    parser_create.add_argument('--rewrite', action='store_true', default=False, help='rewrite')
-    parser_create.set_defaults(func=create)
-
+    parser_create.set_defaults(func=_create)
+    # learn command
     parser_learn = subparsers.add_parser('learn', help='a help')
     parser_learn.add_argument('filename', help='filename')
     parser_learn.add_argument('--file', nargs='+', help='files')
-    parser_learn.add_argument('--dir', help='dir')
+    parser_learn.add_argument('--dir', nargs='+', help='dirs')
     parser_learn.add_argument('--url', nargs='+', help='urls')
     parser_learn.add_argument('--zip', nargs='+', help='zips')
+    parser_learn.add_argument('--no-learn', action='store_true', default=False, help='no learn')
     parser_learn.add_argument('--rewrite', action='store_true', default=False, help='rewrite')
-    parser_learn.set_defaults(func=learn)
-
+    parser_learn.add_argument('--list-top-words', default=50, type=int, help='___')
+    parser_learn.set_defaults(func=_learn)
+    # show command
     parser_show = subparsers.add_parser('show', help='a help')
     parser_show.add_argument('filename', help='filename')
-    parser_show.set_defaults(func=show)
-
+    parser_show.add_argument('--list-top-words', default=50, type=int, help='___')
+    parser_show.set_defaults(func=_show)
+    # classify command
     parser_classify = subparsers.add_parser('classify', help='b help')
     parser_classify.add_argument('classifiers', nargs='+', help='classifiers')
     parser_classify.add_argument('filter', choices=['text', 'html'], help='tipo de filtro')
     parser_classify.add_argument('--lang-filter', default='english', type=str, help='___')
     parser_classify.add_argument('--stemming-filter', default=1, type=int, help='___')
-    parser_classify.add_argument('--file', help='files')
-    parser_classify.add_argument('--url', help='urls')
-    parser_classify.set_defaults(func=classify)
+    parser_classify.add_argument('--file', help='file')
+    parser_classify.add_argument('--url', help='url')
+    parser_classify.set_defaults(func=_classify)
 
     args = parser.parse_args()
     args.func(args)
