@@ -321,6 +321,11 @@ class Document(BagOfWords, Tokenizer):
         words = self.tokenizer(text)
         self.add(words)
 
+    def clear(self):
+        """Clear word list."""
+        BagOfWords.clear(self)
+        self.numdocs = 0
+
     def read_text(self, text):
         """The text is stored in a BagOfWords identified by Id.
         :param text: text to add a BagOfWords
@@ -622,7 +627,7 @@ def show_document(document, filename, verbose):
     print '    stemming: %s' % document.stemming
     print '* total words: %d' % document.num()
     print '* total docs: %d' % document.numdocs
-    if verbose:    
+    if verbose:
         print '*','words'.ljust(20),'|','occurrences'.rjust(20),'|','rate'.rjust(20)
         print ' ','-'*20,'|','-'*20,'|','-'*20
         for word, rate in document.sorted_rates[0:40]:
@@ -649,6 +654,8 @@ def create(args):
 def learn(args):
     try:
         dc = Document.load(args.filename)
+        if args.rewrite:
+            dc.clear()
         show_document(document=dc, filename=args.filename, verbose=False)
         print '--------------------'
         if args.url:
@@ -681,7 +688,7 @@ def main():
     parser_create.add_argument('--stemming-filter', default=1, type=int, help='___')
     parser_create.add_argument('--rewrite', action='store_true', default=False, help='rewrite')
     parser_create.set_defaults(func=create)
- 
+
     parser_learn = subparsers.add_parser('learn', help='a help')
     parser_learn.add_argument('filename', help='filename')
     parser_learn.add_argument('--file', nargs='+', help='files')
