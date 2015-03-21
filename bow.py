@@ -641,11 +641,13 @@ def _show_document(document, filename, verbose, top=50):
             words = 'word'
             rates = document.sorted_rates
         posadj = len(str(len(rates)))+1
-        print '*','pos'.rjust(posadj),'|',words.ljust(35),'|','occurrence'.rjust(10),'|','rate'.rjust(10)
+        print '*','pos'.rjust(posadj),'|',words.ljust(35),'|','occurrence'.rjust(10),\
+              '|','rate'.rjust(10)
         print ' ','-'*posadj,'|','-'*35,'|','-'*10,'|','-'*10
         for word, rate in rates:
-            print ' ',str(rates.index((word, rate))+1).rjust(posadj),'|',word.encode('utf-8').ljust(35),'|',\
-                  str(document[word]).rjust(10),'|',('%.8f' % rate).rjust(10)
+            print ' ',str(rates.index((word, rate))+1).rjust(posadj),'|',\
+                  word.encode('utf-8').ljust(35),'|', str(document[word]).rjust(10),\
+                  '|',('%.8f' % rate).rjust(10)
 
 
 def _show(args):
@@ -712,35 +714,42 @@ def _classify(args):
 
 def main():
     parser = argparse.ArgumentParser(description='', epilog="see at .. for more info")
-    parser.add_argument('--version', action='version', version=__version__, help='show version and exit')
+    parser.add_argument('--version', action='version', version=__version__,
+                        help='show version and exit')
     subparsers = parser.add_subparsers(help='')
     # create command
-    parser_create = subparsers.add_parser('create', help='a help')
-    parser_create.add_argument('filter', choices=['text', 'html'], help='tipo de filtro')
-    parser_create.add_argument('filename', help='filename')
-    parser_create.add_argument('--lang-filter', default='english', type=str, help='___')
-    parser_create.add_argument('--stemming-filter', default=1, type=int, help='___')
+    parser_create = subparsers.add_parser('create', help='create classifier')
+    parser_create.add_argument('filter', choices=['text', 'html'], help='filter type')
+    parser_create.add_argument('filename', help='file to be created where words learned are saved')
+    parser_create.add_argument('--lang-filter', default='english', type=str,
+                               help='language text where remove empty words')
+    parser_create.add_argument('--stemming-filter', default=1, type=int,
+                               help='number loops of lemmatizing')
     parser_create.set_defaults(func=_create)
     # learn command
-    parser_learn = subparsers.add_parser('learn', help='a help')
-    parser_learn.add_argument('filename', help='filename')
-    parser_learn.add_argument('--file', nargs='+', help='files')
-    parser_learn.add_argument('--dir', nargs='+', help='dirs')
-    parser_learn.add_argument('--url', nargs='+', help='urls')
-    parser_learn.add_argument('--zip', nargs='+', help='zips')
-    parser_learn.add_argument('--no-learn', action='store_true', default=False, help='no learn')
-    parser_learn.add_argument('--rewrite', action='store_true', default=False, help='rewrite')
-    parser_learn.add_argument('--list-top-words', default=50, type=int, help='___')
+    parser_learn = subparsers.add_parser('learn', help='add words learned a classifier')
+    parser_learn.add_argument('filename', help='file to write words learned')
+    parser_learn.add_argument('--file', nargs='+', help='filenames to learn')
+    parser_learn.add_argument('--dir', nargs='+', help='directories to learn')
+    parser_learn.add_argument('--url', nargs='+', help='url resources to learn')
+    parser_learn.add_argument('--zip', nargs='+', help='zip filenames to learn')
+    parser_learn.add_argument('--no-learn', action='store_true', default=False,
+                              help='not write to file the words learned')
+    parser_learn.add_argument('--rewrite', action='store_true', default=False,
+                              help='overwrite the file')
+    parser_learn.add_argument('--list-top-words', default=50, type=int,
+                              help='maximum number of words to list, 50 by default, -1 list all')
     parser_learn.set_defaults(func=_learn)
     # show command
-    parser_show = subparsers.add_parser('show', help='a help')
+    parser_show = subparsers.add_parser('show', help='show classifier info')
     parser_show.add_argument('filename', help='filename')
-    parser_show.add_argument('--list-top-words', default=50, type=int, help='___')
+    parser_show.add_argument('--list-top-words', default=50, type=int,
+                             help='maximum number of words to list, 50 by default, -1 list all')
     parser_show.set_defaults(func=_show)
     # classify command
     parser_classify = subparsers.add_parser('classify', help='b help')
     parser_classify.add_argument('classifiers', nargs='+', help='classifiers')
-    parser_classify.add_argument('filter', choices=['text', 'html'], help='tipo de filtro')
+    parser_classify.add_argument('filter', choices=['text', 'html'], help='filter type')
     parser_classify.add_argument('--lang-filter', default='english', type=str, help='___')
     parser_classify.add_argument('--stemming-filter', default=1, type=int, help='___')
     parser_classify.add_argument('--file', help='file')
