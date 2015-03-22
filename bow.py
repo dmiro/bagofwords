@@ -680,7 +680,7 @@ def _learn(args):
         if args.url:
             dc.read_urls(*args.url)
         if args.dir:
-            dc.read_dir(*args.dirs)
+            dc.read_dir(*args.dir)
         if args.file:
             dc.read_files(*args.file)
         if args.zip:
@@ -697,11 +697,15 @@ def _classify(args):
     for filename in args.classifiers:
         dc = Document.load(filename)
         dclist[filename] = dc
-    if args.filter == 'html':
-        dc = HtmlDocument(lang=args.lang_filter, stemming=args.stemming_filter)
-    else:
-        dc = DefaultDocument(lang=args.lang_filter, stemming=args.stemming_filter)
-    if args.url:
+    dc = dclist.values()[0].copy()
+    dc.clear()
+##    if args.filter == 'html':
+##        dc = HtmlDocument(lang=args.lang_filter, stemming=args.stemming_filter)
+##    else:
+##        dc = DefaultDocument(lang=args.lang_filter, stemming=args.stemming_filter)
+    if args.text:
+        dc.read_text(args.text)
+    elif args.url:
         dc.read_urls(args.url)
     elif args.file:
         dc.read_files(args.file)
@@ -713,7 +717,8 @@ def _classify(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='', epilog="see at .. for more info")
+    parser = argparse.ArgumentParser(description='Manage several document to apply text classification.',
+                                     epilog="see https://github.com/dmiro/bagofwords for more info")
     parser.add_argument('--version', action='version', version=__version__,
                         help='show version and exit')
     subparsers = parser.add_subparsers(help='')
@@ -747,13 +752,11 @@ def main():
                              help='maximum number of words to list, 50 by default, -1 list all')
     parser_show.set_defaults(func=_show)
     # classify command
-    parser_classify = subparsers.add_parser('classify', help='b help')
+    parser_classify = subparsers.add_parser('classify', help='Naive Bayes text classification')
     parser_classify.add_argument('classifiers', nargs='+', help='classifiers')
-    parser_classify.add_argument('filter', choices=['text', 'html'], help='filter type')
-    parser_classify.add_argument('--lang-filter', default='english', type=str, help='___')
-    parser_classify.add_argument('--stemming-filter', default=1, type=int, help='___')
-    parser_classify.add_argument('--file', help='file')
-    parser_classify.add_argument('--url', help='url')
+    parser_classify.add_argument('--file', help='file to classify')
+    parser_classify.add_argument('--url', help='url resource to classify')
+    parser_classify.add_argument('--text',help='text to classify')
     parser_classify.set_defaults(func=_classify)
 
     args = parser.parse_args()
