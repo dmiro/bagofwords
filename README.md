@@ -5,7 +5,7 @@
 Introduction
 ------------
 
-A Python module that allows you to create and manage a collection of occurrence counts of words without regard to grammar. The main purpose is provide a set of classes to manage several document classifieds by category in order to apply **text classification**.
+A Python module that allows you to create and manage a collection of occurrence counts of words without regard to grammar. The main purpose is provide a set of classes to manage several document classifieds by category in order to apply **Text Classification**.
 
 You can make use via **API** or via **Command Line**. For example, you can generate your classified documents (*learn*) via Command Line and after via API classify an input document.
 
@@ -147,6 +147,93 @@ rates >>
 Command Line Tool
 -----------------
 
+```
+usage: bow [-h] [--version] {create,learn,show,classify} ...
+
+Manage several document to apply text classification.
+
+positional arguments:
+  {create,learn,show,classify}
+    create              create classifier
+    learn               add words learned a classifier
+    show                show classifier info
+    classify            Naive Bayes text classification
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show version and exit
+```
+
+**Create Command**
+```
+usage: bow create [-h] [--lang-filter LANG_FILTER]
+                  [--stemming-filter STEMMING_FILTER]
+                  {text,html} filename
+
+positional arguments:
+  {text,html}           filter type
+  filename              file to be created where words learned are saved
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --lang-filter LANG_FILTER
+                        language text where remove empty words
+  --stemming-filter STEMMING_FILTER
+                        number loops of lemmatizing
+```
+
+**Learn Command**
+```
+usage: bow learn [-h] [--file FILE [FILE ...]] [--dir DIR [DIR ...]]
+                 [--url URL [URL ...]] [--zip ZIP [ZIP ...]] [--no-learn]
+                 [--rewrite] [--list-top-words LIST_TOP_WORDS]
+                 filename
+
+positional arguments:
+  filename              file to write words learned
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --file FILE [FILE ...]
+                        filenames to learn
+  --dir DIR [DIR ...]   directories to learn
+  --url URL [URL ...]   url resources to learn
+  --zip ZIP [ZIP ...]   zip filenames to learn
+  --no-learn            not write to file the words learned
+  --rewrite             overwrite the file
+  --list-top-words LIST_TOP_WORDS
+                        maximum number of words to list, 50 by default, -1
+                        list all
+```
+
+**Show Command**
+```
+usage: bow show [-h] [--list-top-words LIST_TOP_WORDS] filename
+
+positional arguments:
+  filename              filename
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --list-top-words LIST_TOP_WORDS
+                        maximum number of words to list, 50 by default, -1
+                        list all
+```
+
+**Classify Command**
+```
+usage: bow classify [-h] [--file FILE] [--url URL] [--text TEXT]
+                    classifiers [classifiers ...]
+
+positional arguments:
+  classifiers  classifiers
+
+optional arguments:
+  -h, --help   show this help message and exit
+  --file FILE  file to classify
+  --url URL    url resource to classify
+  --text TEXT  text to classify
+```
 
 Example
 *******
