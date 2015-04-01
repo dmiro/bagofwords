@@ -32,6 +32,7 @@ setup(
     name=PROJECT,
     version=__import__("bow").__version__,
     author = "David Miro <lite.3engine@gmail.com>",
+    author_email = 'lite.3engine@gmail.com',
     description = "The main goal this Python module is to provide functions to apply Text Classification.",
     long_description=long_description,
     license=open('LICENSE').read(),

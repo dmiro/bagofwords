@@ -49,10 +49,13 @@ Uninstallation
 Python API
 ----------
 
-This module requires Python 2.7+ 
+
+#### Methods
+
+* `document_classifier(document, **classifieds)` Text classification based on an implementation of Naive Bayes
+
 
 Module contains two main classes `DocumentClass` and `Document` and four secondary classes `BagOfWords`, `WordFilters`, `TextFilters` and `Tokenizer`
-
 
 #### Main classes
 
@@ -167,7 +170,187 @@ optional arguments:
   --text TEXT  text to classify
 ```
 
-Examples
+Example
+-------
+
+Previously you need to download a spam corpus  **enron-spam dataset**. For example you can download a compressed file that includes a directory with **1500 spam emails** and a directory with **4012 ham emails**.
+
+```
+ http://www.aueb.gr/users/ion/data/enron-spam/preprocessed/enron3.tar.gz
+```
+
+Now we will create the **spam** and **ham** classifiers 
+
+```
+$ bow create text spam
+* filename: spam
+* filter:
+    type: DefaultDocument
+    lang: english
+    stemming: 1
+* total words: 0
+* total docs: 0
+```
+
+```
+$ bow create text ham
+* filename: ham
+* filter:
+    type: DefaultDocument
+    lang: english
+    stemming: 1
+* total words: 0
+* total docs: 0
+```
+
+It's time to learn
+
+```
+$ bow learn spam --dir enron3/spam
+
+current
+=======
+* filename: spam
+* filter:
+    type: DefaultDocument
+    lang: english
+    stemming: 1
+* total words: 0
+* total docs: 0
+
+updated
+=======
+* filename: spam
+* filter:
+    type: DefaultDocument
+    lang: english
+    stemming: 1
+* total words: 223145
+* total docs: 1500
+* pos | word (top 50)                       | occurrence |       rate
+  --- | ----------------------------------- | ---------- | ----------
+    1 | "                                   |       2438 | 0.01092563
+    2 | subject                             |       1662 | 0.00744807
+    3 | compani                             |       1659 | 0.00743463
+    4 | s                                   |       1499 | 0.00671761
+    5 | will                                |       1194 | 0.00535078
+    6 | com                                 |        978 | 0.00438280
+    7 | statement                           |        935 | 0.00419010
+    8 | secur                               |        908 | 0.00406910
+    9 | inform                              |        880 | 0.00394362
+   10 | e                                   |        802 | 0.00359408
+   11 | can                                 |        798 | 0.00357615
+   12 | http                                |        779 | 0.00349100
+   13 | pleas                               |        743 | 0.00332967
+   14 | invest                              |        740 | 0.00331623
+   15 | de                                  |        739 | 0.00331175
+   16 | o                                   |        733 | 0.00328486
+   17 | 1                                   |        732 | 0.00328038
+   18 | 2                                   |        709 | 0.00317731
+   19 | stock                               |        700 | 0.00313697
+   20 | price                               |        664 | 0.00297564
+  ....
+```
+
+```
+$ bow learn ham --dir enron3/ham
+
+current
+=======
+* filename: ham
+* filter:
+    type: DefaultDocument
+    lang: english
+    stemming: 1
+* total words: 0
+* total docs: 0
+
+updated
+=======
+* filename: ham
+* filter:
+    type: DefaultDocument
+    lang: english
+    stemming: 1
+* total words: 1293023
+* total docs: 4012
+* pos | word (top 50)                       | occurrence |       rate
+  --- | ----------------------------------- | ---------- | ----------
+    1 | enron                               |      29805 | 0.02305063
+    2 | s                                   |      22438 | 0.01735313
+    3 | "                                   |      15712 | 0.01215137
+    4 | compani                             |      12039 | 0.00931074
+    5 | said                                |       9470 | 0.00732392
+    6 | will                                |       8862 | 0.00685371
+    7 | 2001                                |       8293 | 0.00641365
+    8 | subject                             |       7167 | 0.00554282
+    9 | 1                                   |       5887 | 0.00455290
+   10 | trade                               |       5718 | 0.00442220
+   11 | energi                              |       5599 | 0.00433016
+   12 | market                              |       5498 | 0.00425205
+   13 | new                                 |       5278 | 0.00408191
+   14 | 2                                   |       4742 | 0.00366737
+   15 | dynegi                              |       4651 | 0.00359700
+   16 | stock                               |       4594 | 0.00355291
+   17 | 10                                  |       4545 | 0.00351502
+   18 | year                                |       4517 | 0.00349336
+   19 | power                               |       4503 | 0.00348254
+   20 | share                               |       4393 | 0.00339746
+ ....
+``````
+
+Finally, we can classify a text file or url
+
+```
+$ bow classify spam ham --text "company"
+
+* classifier                          |       rate
+  ----------------------------------- | ----------
+  ham                                 | 0.87888743
+  spam                                | 0.12111257
+```
+
+```
+$ bow classify spam ham --text "new lottery"
+
+* classifier                          |       rate
+  ----------------------------------- | ----------
+  spam                                | 0.96633627
+  ham                                 | 0.03366373
+```
+
+```
+$ bow classify spam ham --text "Subject: a friendly professional online pharmacy focused on you !"
+
+* classifier                          |       rate
+  ----------------------------------- | ----------
+  spam                                | 0.99671480
+  ham                                 | 0.00328520
+```
+
+You should know that it is also possible to classify from python code
+
+```
+import bow
+
+spam = bow.Document.load('spam')
+ham = bow.Document.load('ham')
+dc = bow.DefaultDocument()
+
+dc.read_text("company")
+result = bow.document_classifier(dc, spam=spam, ham=ham)
+
+print result
+```
+
+Result
+
+```
+[('ham', 0.8788874288217258), ('spam', 0.12111257117827418)]
+```
+
+
+Others examples
 -------
 
 **Join several bag of words**

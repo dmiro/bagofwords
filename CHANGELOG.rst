@@ -1,5 +1,5 @@
-2015.3.15
-=========
+1.0.2
+=====
 * Initial version.
 * Feature: document_classifier method
 * Feature: DefaultTokenizer, SimpleTokenizer, HtmlTokenizer Class
