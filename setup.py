@@ -1,16 +1,39 @@
 from setuptools import setup, find_packages
 
 PROJECT = "bagofwords"
-  
+
+long_description = ''
+
+try:
+    import subprocess
+    import pandoc
+
+    process = subprocess.Popen(
+        ['which pandoc'],
+        shell=True,
+        stdout=subprocess.PIPE,
+        universal_newlines=True
+    )
+
+    pandoc_path = process.communicate()[0]
+    pandoc_path = pandoc_path.strip('\n')
+
+    pandoc.core.PANDOC_PATH = pandoc_path
+
+    doc = pandoc.Document()
+    doc.markdown = open('README.md').read()
+
+    long_description = doc.rst
+
+except:
+    pass
+
 setup(
     name=PROJECT,
     version=__import__("bow").__version__,
     author = "David Miro <lite.3engine@gmail.com>",
-    description = "A Python module that allows you to create and manage a collection of \
-    occurrence counts of words without regard to grammar. The main purpose is provide a set \
-    of classes to manage several document classifieds by category in order to apply text \
-    classification.",
-    long_description=open('README.md').read(),
+    description = "The main goal this Python module is to provide functions to apply Text Classification.",
+    long_description=long_description,
     license=open('LICENSE').read(),
     url='https://github.com/dmiro/bagofwords',
     classifiers=[
@@ -23,11 +46,12 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
         'Topic :: Scientific/Engineering :: Information Analysis',
+        'License :: OSI Approved :: MIT License'
         ],
     py_modules=['bow'],
-##    entry_points = {
-##        'console_scripts': ['client = client:main']
-##        },
+    entry_points = {
+        'console_scripts': ['bow = bow:main']
+        },
     install_requires=[
         'stop-words',
         'PyStemmer'

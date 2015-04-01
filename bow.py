@@ -12,7 +12,7 @@ from zipfile import ZipFile
 from json import JSONEncoder, JSONDecoder
 
 __author__ = 'dmiro'
-__version_info__ = (2015, 3, 15)
+__version_info__ = (2015, 4, 1)
 __version__ = '.'.join(str(v) for v in __version_info__)
 
 
