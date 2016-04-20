@@ -1,11 +1,12 @@
 # bagofwords
 
 [![Build Status](https://travis-ci.org/dmiro/bagofwords.svg)](https://travis-ci.org/dmiro/bagofwords)
-[![Latest Version](https://pypip.in/version/bagofwords/badge.svg)](https://pypi.python.org/pypi/bagofwords/)
-[![Downloads](https://pypip.in/download/bagofwords/badge.svg)](https://pypi.python.org/pypi/bagofwords/)
-[![Supported Python versions](https://pypip.in/py_versions/bagofwords/badge.svg)](https://pypi.python.org/pypi/bagofwords/)
-[![Development Status](https://pypip.in/status/bagofwords/badge.svg)](https://pypi.python.org/pypi/bagofwords/)
-[![License](https://pypip.in/license/bagofwords/badge.svg)](https://pypi.python.org/pypi/bagofwords/)
+[![Latest Version](http://badge.kloud51.com/pypi/v/bagofwords.svg)](https://pypi.python.org/pypi/bagofwords/)
+[![Downloads](http://badge.kloud51.com/pypi/d/bagofwords.svg)](https://pypi.python.org/pypi/bagofwords/)
+[![Supported Python versions](http://badge.kloud51.com/pypi/py_versions/bagofwords.svg)](https://pypi.python.org/pypi/bagofwords/)
+[![Development Status](http://badge.kloud51.com/pypi/s/bagofwords.svg)](https://pypi.python.org/pypi/bagofwords/)
+[![License](http://badge.kloud51.com/pypi/l/bagofwords.svg)](https://pypi.python.org/pypi/bagofwords/)
+
 
 Introduction
 ------------
