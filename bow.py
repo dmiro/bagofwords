@@ -3,11 +3,11 @@ import os
 import copy
 import uuid
 import math
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import inspect
 import argparse
 import unicodedata
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 from zipfile import ZipFile
 from json import JSONEncoder, JSONDecoder
 
@@ -25,7 +25,7 @@ class BagOfWords(object):
 
     def __calc(self, operation, *args):
         for words in args:
-            if isinstance(words, basestring):
+            if isinstance(words, str):
                 words = [words]
             for word in words:
                 n = 1
@@ -56,7 +56,7 @@ class BagOfWords(object):
         """
         total = float(self.num())
         if total:
-            return {k:v/total for k, v in self._bow.iteritems()}
+            return {k:v/total for k, v in self._bow.items()}
         else:
             return {}
 
@@ -67,7 +67,7 @@ class BagOfWords(object):
         """
         total = float(self.num())
         if total:
-            res = [(k,v/total) for k, v in self._bow.iteritems()]
+            res = [(k,v/total) for k, v in self._bow.items()]
             return sorted(res, key=lambda t: t[1], reverse=True)
         else:
             return []
@@ -126,7 +126,7 @@ class BagOfWords(object):
         return self.__sub__(other)
 
     def __iter__(self):
-        return self._bow.iteritems()
+        return iter(self._bow.items())
 
     def __getitem__(self, offset):
         return self._bow.__getitem__(offset)
@@ -155,32 +155,32 @@ class BagOfWords(object):
 
     def iteritems(self):
         """Return an iterator over the word dictionary’s (word, frequency) pairs."""
-        return self._bow.iteritems()
+        return iter(self._bow.items())
 
     def keys(self):
         """Word list contained in the object."""
-        return self._bow.keys()
+        return list(self._bow.keys())
 
     def words(self):
         """Word list contained in the object."""
-        return self.keys()
+        return list(self.keys())
 
     def items(self):
-        return self._bow.items()
+        return list(self._bow.items())
 
     def values(self):
-        return self._bow.values()
+        return list(self._bow.values())
 
     def num(self):
         """Total number of words."""
         return sum(self._bow.values())
 
     def has_key(self, key):
-        return self._bow.has_key(key)
+        return key in self._bow
 
     def __contains__(self, key):
         """Method key in y"""
-        return self.has_key(key)
+        return key in self
 
     def __call__(self, *args):
          self.add(self, *args)
@@ -202,7 +202,7 @@ class TextFilters(object):
     @staticmethod
     def invalid_chars(text):
         """Remove invalid chars from a text."""
-        INVALID_CHARS = u"/\¨º-~#@|¡!,·$%&()¿?'[^""`]+}{><;,:.=*^_"
+        INVALID_CHARS = "/\¨º-~#@|¡!,·$%&()¿?'[^""`]+}{><;,:.=*^_"
         return ''.join([char for char in text if char not in INVALID_CHARS])
 
     @staticmethod
@@ -262,7 +262,7 @@ class WordFilters(object):
     @staticmethod
     def normalize(words):
         """Normalize chars from a text."""
-        return [''.join((char for char in unicodedata.normalize('NFD', unicode(word)) if unicodedata.category(char) != 'Mn'))
+        return [''.join((char for char in unicodedata.normalize('NFD', str(word)) if unicodedata.category(char) != 'Mn'))
                 for word in words]
 
 
@@ -314,9 +314,9 @@ class Document(BagOfWords, Tokenizer):
 
     def _read(self, id_, text):
         try:
-            text = unicode(text, 'utf-8')
+            text = str(text, 'utf-8')
         except UnicodeError:
-            text = unicode(text, 'latin-1')
+            text = str(text, 'latin-1')
         self.numdocs += 1
         words = self.tokenizer(text)
         self.add(words)
@@ -363,8 +363,8 @@ class Document(BagOfWords, Tokenizer):
         """
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20140129 Firefox/24.0'}
         for url in urls:
-            req = urllib2.Request(url=url, headers=headers)
-            text = urllib2.urlopen(req).read()
+            req = urllib.request.Request(url=url, headers=headers)
+            text = urllib.request.urlopen(req).read()
             self._read(url, text)
 
     def read_zips(self, *zipfilenames):
@@ -420,7 +420,7 @@ class Document(BagOfWords, Tokenizer):
 ##                    else:
 ##                        obj = class_()
                     obj = class_()
-                    for k, v in d.iteritems():
+                    for k, v in d.items():
                         setattr(obj, k, v)
                     return obj
                 return d
@@ -464,9 +464,9 @@ class DocumentClass(Document):
 
     def _read(self, id_, text):
         try:
-            text = unicode(text, 'utf-8')
+            text = str(text, 'utf-8')
         except UnicodeError:
-            text = unicode(text, 'latin-1')
+            text = str(text, 'latin-1')
         words = self.tokenizer(text)
         bow = BagOfWords(words)
         if not id_:
@@ -607,12 +607,12 @@ def document_classifier(document, **classifieds):
     # http://blog.yhathq.com/posts/naive-bayes-in-python.html
     res = {}
     total_docs = SimpleDocument()
-    for classified in classifieds.values():
+    for classified in list(classifieds.values()):
         total_docs += classified
-    for k_classified, classified in classifieds.items():
+    for k_classified, classified in list(classifieds.items()):
         prior = float(classified.num()) / float(total_docs.num())
         log_prob = 0.0
-        for word, value in document.items():
+        for word, value in list(document.items()):
             if word in total_docs:
                 if classified.rate(word) > 0.0:
                     # log(probability) it requires fewer decimal places
@@ -621,18 +621,18 @@ def document_classifier(document, **classifieds):
         exp_prob = math.exp(log_prob + math.log(prior))
         res[k_classified] = exp_prob
     total = sum(res.values())
-    res = [(k,v/total) for k, v in res.items()]
+    res = [(k,v/total) for k, v in list(res.items())]
     return sorted(res, key=lambda t: t[1], reverse=True)
 
 
 def _show_document(document, filename, verbose, top=50):
-    print '* filename: %s' % filename
-    print '* filter:'
-    print '    type: %s' % document.__class__.__name__
-    print '    lang: %s' % document.lang
-    print '    stemming: %s' % document.stemming
-    print '* total words: %d' % document.num()
-    print '* total docs: %d' % document.numdocs
+    print('* filename: %s' % filename)
+    print('* filter:')
+    print('    type: %s' % document.__class__.__name__)
+    print('    lang: %s' % document.lang)
+    print('    stemming: %s' % document.stemming)
+    print('* total words: %d' % document.num())
+    print('* total docs: %d' % document.numdocs)
     if verbose:
         if top:
             words = 'word (top %d)' % top
@@ -641,13 +641,13 @@ def _show_document(document, filename, verbose, top=50):
             words = 'word'
             rates = document.sorted_rates
         posadj = len(str(len(rates)))+1
-        print '*','pos'.rjust(posadj),'|',words.ljust(35),'|','occurrence'.rjust(10),\
-              '|','rate'.rjust(10)
-        print ' ','-'*posadj,'|','-'*35,'|','-'*10,'|','-'*10
+        print('*','pos'.rjust(posadj),'|',words.ljust(35),'|','occurrence'.rjust(10),\
+              '|','rate'.rjust(10))
+        print(' ','-'*posadj,'|','-'*35,'|','-'*10,'|','-'*10)
         for word, rate in rates:
-            print ' ',str(rates.index((word, rate))+1).rjust(posadj),'|',\
+            print(' ',str(rates.index((word, rate))+1).rjust(posadj),'|',\
                   word.encode('utf-8').ljust(35),'|', str(document[word]).rjust(10),\
-                  '|',('%.8f' % rate).rjust(10)
+                  '|',('%.8f' % rate).rjust(10))
 
 
 def _show(args):
@@ -655,7 +655,7 @@ def _show(args):
         dc = Document.load(args.filename)
         _show_document(document=dc, filename=args.filename, verbose=True, top=args.list_top_words)
     except IOError:
-        print 'No such classifier: %s' % args.filename
+        print('No such classifier: %s' % args.filename)
 
 
 def _create(args):
@@ -672,11 +672,11 @@ def _learn(args):
         dc = Document.load(args.filename)
         if args.rewrite:
             dc.clear()
-        print '\ncurrent'
-        print '======='
+        print('\ncurrent')
+        print('=======')
         _show_document(document=dc, filename=args.filename, verbose=False)
-        print '\nupdated'
-        print '======='
+        print('\nupdated')
+        print('=======')
         if args.url:
             dc.read_urls(*args.url)
         if args.dir:
@@ -689,7 +689,7 @@ def _learn(args):
             dc.save(args.filename)
         _show_document(document=dc, filename=args.filename, verbose=True, top=args.list_top_words)
     except IOError:
-        print 'No such classifier: %s' % args.filename
+        print('No such classifier: %s' % args.filename)
 
 
 def _classify(args):
@@ -697,7 +697,7 @@ def _classify(args):
     for filename in args.classifiers:
         dc = Document.load(filename)
         dclist[filename] = dc
-    dc = dclist.values()[0].copy()
+    dc = list(dclist.values())[0].copy()
     dc.clear()
 ##    if args.filter == 'html':
 ##        dc = HtmlDocument(lang=args.lang_filter, stemming=args.stemming_filter)
@@ -710,10 +710,10 @@ def _classify(args):
     elif args.file:
         dc.read_files(args.file)
     result = document_classifier(dc, **dclist)
-    print '*','classifier'.ljust(35),'|','rate'.rjust(10)
-    print ' ','-'*35,'|','-'*10
+    print('*','classifier'.ljust(35),'|','rate'.rjust(10))
+    print(' ','-'*35,'|','-'*10)
     for classifier, rate in result:
-        print ' ',classifier.encode('utf-8').ljust(35),'|',('%.8f' % rate).rjust(10)
+        print(' ',classifier.encode('utf-8').ljust(35),'|',('%.8f' % rate).rjust(10))
 
 
 def main():

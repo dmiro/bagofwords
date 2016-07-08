@@ -20,12 +20,12 @@ class BagOfWordsTest(TestCase):
         self.assertEqual(dict(self.bow), {'David':3})
 
     def test_add_two_words(self):
-        self.bow.add(u'David', [u'David',u'Álex'])
-        self.assertEqual(self.bow.words(), [u'Álex', u'David'])
+        self.bow.add('David', ['David','Álex'])
+        self.assertEqual(self.bow.words(), ['Álex', 'David'])
         self.assertEqual(len(self.bow), 2)
         self.assertEqual(self.bow.num(), 3)
         self.assertEqual(self.bow.freq('David'), 2)
-        self.assertEqual(dict(self.bow), {u'Álex':1, 'David':2})
+        self.assertEqual(dict(self.bow), {'Álex':1, 'David':2})
 
     def test_del_one_word(self):
         self.bow.delete('David')
@@ -44,21 +44,21 @@ class BagOfWordsTest(TestCase):
         self.assertEqual(dict(self.bow), {'David':1})
 
     def test_del_two_word(self):
-        self.bow.delete('David', u'Álex')
+        self.bow.delete('David', 'Álex')
         self.assertEqual(dict(self.bow), {})
         #
-        self.bow.add('David', u'Álex')
-        self.bow.delete('David', u'Álex')
+        self.bow.add('David', 'Álex')
+        self.bow.delete('David', 'Álex')
         self.assertEqual(dict(self.bow), {})
         #
         self.bow.add({'David':2})
         self.bow.delete('David')
-        self.bow.add(u'Álex')
-        self.assertEqual(self.bow.words(), [u'Álex', 'David'])
+        self.bow.add('Álex')
+        self.assertEqual(self.bow.words(), ['Álex', 'David'])
         self.assertEqual(len(self.bow), 2)
         self.assertEqual(self.bow.num(), 2)
         self.assertEqual(self.bow.freq('David'), 1)
-        self.assertEqual(dict(self.bow), {u'Álex':1, 'David':1})
+        self.assertEqual(dict(self.bow), {'Álex':1, 'David':1})
 
     def test_join_add(self):
         a = BagOfWords('car', 'chair', 'chicken')
@@ -136,7 +136,7 @@ class BagOfWordsTest(TestCase):
 
     def test_has_key(self):
         self.bow.add('car', 'chair', 'chicken')
-        self.assertEqual(self.bow.has_key('car'), True)
+        self.assertEqual('car' in self.bow, True)
         self.assertEqual('car' in self.bow, True)
 
     def test_rate(self):
@@ -156,35 +156,35 @@ class TokenizerTest(TestCase):
     def test_default_tokenizer(self):
         tokens = DefaultTokenizer()
         words = tokens('How do you convert a tuple to a list?');
-        self.assertEqual(words, [u'convert', u'tupl', u'list'])
+        self.assertEqual(words, ['convert', 'tupl', 'list'])
         #
         words = tokens.tokenizer('How do you convert a tuple to a list?');
-        self.assertEqual(words, [u'convert', u'tupl', u'list'])
+        self.assertEqual(words, ['convert', 'tupl', 'list'])
         #
         tokens = DefaultTokenizer(stemming=0)
         words = tokens('How do you convert a tuple to a list?');
-        self.assertEqual(words, [u'convert', u'tuple', u'list'])
+        self.assertEqual(words, ['convert', 'tuple', 'list'])
         #
         tokens = DefaultTokenizer(lang='', stemming=0)
         words = tokens('How do you convert a tuple to a list?');
-        self.assertEqual(words, [u'how', u'do', u'you', u'convert', u'a', u'tuple', u'to', u'a', u'list'])
+        self.assertEqual(words, ['how', 'do', 'you', 'convert', 'a', 'tuple', 'to', 'a', 'list'])
         #
         tokens = DefaultTokenizer(lang='spanish')
-        words = tokens(u'Cómo convertir una tupla a lista?');
-        self.assertEqual(words, [u'com', u'convert', u'tupl', u'list'])
+        words = tokens('Cómo convertir una tupla a lista?');
+        self.assertEqual(words, ['com', 'convert', 'tupl', 'list'])
         #
         tokens = DefaultTokenizer(lang='spanish', stemming=0)
-        words = tokens(u'Cómo convertir una tupla a lista?');
-        self.assertEqual(words, [u'como', u'convertir', u'tupla', u'lista'])
+        words = tokens('Cómo convertir una tupla a lista?');
+        self.assertEqual(words, ['como', 'convertir', 'tupla', 'lista'])
         #
         tokens = DefaultTokenizer(lang='', stemming=0)
-        words = tokens(u'Cómo convertir una tupla a lista?');
-        self.assertEqual(words, [u'como', u'convertir', u'una', u'tupla', u'a', u'lista'])
+        words = tokens('Cómo convertir una tupla a lista?');
+        self.assertEqual(words, ['como', 'convertir', 'una', 'tupla', 'a', 'lista'])
 
     def test_simple_tokenizer(self):
         tokens = SimpleTokenizer()
         words = tokens('How, do you convert - a tuple to a list?');
-        self.assertEqual(words, [u'how', u'do', u'you', u'convert', u'a', u'tuple', u'to', u'a', u'list'])
+        self.assertEqual(words, ['how', 'do', 'you', 'convert', 'a', 'tuple', 'to', 'a', 'list'])
 
     def test_tokenizer(self):
 
@@ -202,7 +202,7 @@ class TokenizerTest(TestCase):
                 return words
         tokens = _MyTokenizer()
         words = tokens('How, do you convert - a tuple to a list?');
-        self.assertEqual(words, [u'HOW,', u'DO', u'YOU', u'CONVERT', u'-', u'A', u'TUPLE', u'TO', u'A', u'LIST?'])
+        self.assertEqual(words, ['HOW,', 'DO', 'YOU', 'CONVERT', '-', 'A', 'TUPLE', 'TO', 'A', 'LIST?'])
         #
         class _MyTokenizer(Tokenizer):
 
@@ -236,8 +236,8 @@ class TokenizerTest(TestCase):
                 </html>
                 '''
         words = tokens(text)
-        self.assertEqual(words, [u'project', u'description', u'small', u'script', u'intended', u'allow', u'conversion',
-                                 u'html', u'markup', u'plain', u'text'])
+        self.assertEqual(words, ['project', 'description', 'small', 'script', 'intended', 'allow', 'conversion',
+                                 'html', 'markup', 'plain', 'text'])
 
 
 class DocumentClassTest(TestCase):
@@ -247,8 +247,8 @@ class DocumentClassTest(TestCase):
         dclass('hello a beautiful world!', 'text one')
         dclass('hello the Moon!', 'text two')
         dclass('hello the world!', 'text one')
-        self.assertEqual(dclass.docs, {'text two': {u'hello': 1, u'moon': 1}, 'text one': {u'world': 1, u'hello': 1}})
-        self.assertEqual(dclass, {u'world': 1, u'hello': 2, u'moon': 1})
+        self.assertEqual(dclass.docs, {'text two': {'hello': 1, 'moon': 1}, 'text one': {'world': 1, 'hello': 1}})
+        self.assertEqual(dclass, {'world': 1, 'hello': 2, 'moon': 1})
         self.assertEqual(dclass.numdocs, 2)
 
     def test_default_document(self):
@@ -256,7 +256,7 @@ class DocumentClassTest(TestCase):
         dclass('hello a beautiful world!')
         dclass('hello the Moon!')
         dclass('hello the world!')
-        self.assertEqual(dclass, {u'world': 2, u'hello': 3, u'beauti': 1, u'moon': 1})
+        self.assertEqual(dclass, {'world': 2, 'hello': 3, 'beauti': 1, 'moon': 1})
         self.assertEqual(dclass.numdocs, 3)
 
     def test_json(self):
@@ -266,8 +266,8 @@ class DocumentClassTest(TestCase):
         json_ = dclass.to_json()
         dclass = DocumentClass.from_json(json_)
         self.assertEqual(dclass.__class__.__name__ , 'DefaultDocumentClass')
-        self.assertEqual(dclass.docs, {u'2': {u'mund': 1, u'bonit': 1}, u'1': {u'mund': 1, u'hol': 1}})
-        self.assertEqual(dclass, {u'mund': 2, u'hol': 1, u'bonit': 1})
+        self.assertEqual(dclass.docs, {'2': {'mund': 1, 'bonit': 1}, '1': {'mund': 1, 'hol': 1}})
+        self.assertEqual(dclass, {'mund': 2, 'hol': 1, 'bonit': 1})
         self.assertEqual(dclass.numdocs, 2)
         self.assertEqual(dclass.lang, 'spanish')
         self.assertEqual(dclass.stemming, 1)
@@ -314,7 +314,7 @@ class DocumentClassifierTest(TestCase):
         with mock.patch('bow.open', mock.mock_open(read_data=data), create=True) as m:
             docnumbers = SimpleDocument.load('test.dat')
         m.assert_called_once_with('test.dat','r')
-        self.assertEqual(docnumbers, {u'four': 1, u'one': 2, u'three': 2, u'two': 2})
+        self.assertEqual(docnumbers, {'four': 1, 'one': 2, 'three': 2, 'two': 2})
         
        
 if __name__ == '__main__':
