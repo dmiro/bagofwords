@@ -1,9 +1,11 @@
 language: python
 python:
   - "2.7"
+  - "3.5"
 before_install:
 install:
   - pip install stop-words
   - pip install PyStemmer
+  - pip install six
 script:
   - python setup.py test
