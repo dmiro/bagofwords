@@ -46,6 +46,7 @@ setup(
         'Intended Audience :: Information Technology',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'License :: OSI Approved :: MIT License'
         ],
@@ -55,7 +56,8 @@ setup(
         },
     install_requires=[
         'stop-words',
-        'PyStemmer'
+        'PyStemmer',
+        'six'
         ],
     test_suite = 'test',
     platforms=['Any'],
