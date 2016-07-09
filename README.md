@@ -17,10 +17,11 @@ You can make use via **API** or via **Command Line**. For example, you can gener
 
 #### Third parties modules
 
-Module uses two third parties modules
+Module uses thress third parties modules
 
 * [stop_words](https://github.com/Alir3z4/python-stop-words)
 * [pystemmer](https://github.com/snowballstem/pystemmer)
+* [six](https://bitbucket.org/gutworth/six)
 
 The first module is used in **stop_words filter**, the second module is used in **stemming filter**. If you don't use these two filters, you don't need install them.
 
