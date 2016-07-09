@@ -2,4 +2,5 @@
 bagofwords authors
 ==============
 
-* `David Miró <https://github.com/dmiro>`_
+* `David MirÃ³ <https://github.com/dmiro>`_
+* `Ivan <https://github.com/xmnlab>`_
