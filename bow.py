@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+from six import text_type as str
+from six import text_type as str
+from six.moves import urllib
+from six.moves.html_parser import HTMLParser
+from zipfile import ZipFile
+from json import JSONEncoder, JSONDecoder
+
 import os
 import copy
 import uuid
 import math
-import urllib.request, urllib.error, urllib.parse
 import inspect
 import argparse
 import unicodedata
-from html.parser import HTMLParser
-from zipfile import ZipFile
-from json import JSONEncoder, JSONDecoder
 
 __author__ = 'dmiro'
-__version_info__ = (1, 0, 2)
+__version_info__ = (1, 0, 3)
 __version__ = '.'.join(str(v) for v in __version_info__)
+
 
 
 class BagOfWords(object):
@@ -56,7 +61,7 @@ class BagOfWords(object):
         """
         total = float(self.num())
         if total:
-            return {k:v/total for k, v in self._bow.items()}
+            return {k:v/total for k, v in list(self._bow.items())}
         else:
             return {}
 
@@ -67,7 +72,7 @@ class BagOfWords(object):
         """
         total = float(self.num())
         if total:
-            res = [(k,v/total) for k, v in self._bow.items()]
+            res = [(k,v/total) for k, v in list(self._bow.items())]
             return sorted(res, key=lambda t: t[1], reverse=True)
         else:
             return []
@@ -126,7 +131,7 @@ class BagOfWords(object):
         return self.__sub__(other)
 
     def __iter__(self):
-        return iter(self._bow.items())
+        return list(self._bow.items())
 
     def __getitem__(self, offset):
         return self._bow.__getitem__(offset)
@@ -140,11 +145,18 @@ class BagOfWords(object):
     def __delitem__(self, key):
         del self._bow[key]
 
-    def __cmp__(self, other):
+    def __eq__(self, other):
         if isinstance(other, BagOfWords):
-            return cmp(self._bow, other._bow)
+            return self._bow == other._bow
         else:
-            return cmp(self._bow, other)
+            return self._bow == other
+
+    def __ne__(self, other):
+        if isinstance(other, BagOfWords):
+            return self._bow !=other._bow
+        else:
+            return self._bow != other
+
 
     def copy(self):
         return copy.deepcopy(self)
@@ -153,9 +165,9 @@ class BagOfWords(object):
         """Clear word list."""
         self._bow.clear()
 
-    def iteritems(self):
+    def items(self):
         """Return an iterator over the word dictionary’s (word, frequency) pairs."""
-        return iter(self._bow.items())
+        return list(self._bow.items())
 
     def keys(self):
         """Word list contained in the object."""
@@ -175,12 +187,9 @@ class BagOfWords(object):
         """Total number of words."""
         return sum(self._bow.values())
 
-    def has_key(self, key):
-        return key in self._bow
-
     def __contains__(self, key):
         """Method key in y"""
-        return key in self
+        return key in self._bow
 
     def __call__(self, *args):
          self.add(self, *args)
@@ -313,10 +322,6 @@ class Document(BagOfWords, Tokenizer):
         self.numdocs = 0
 
     def _read(self, id_, text):
-        try:
-            text = str(text, 'utf-8')
-        except UnicodeError:
-            text = str(text, 'latin-1')
         self.numdocs += 1
         words = self.tokenizer(text)
         self.add(words)
@@ -363,7 +368,7 @@ class Document(BagOfWords, Tokenizer):
         """
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20140129 Firefox/24.0'}
         for url in urls:
-            req = urllib.request.Request(url=url, headers=headers)
+            req = urllib.Request(url=url, headers=headers)
             text = urllib.request.urlopen(req).read()
             self._read(url, text)
 
@@ -420,7 +425,7 @@ class Document(BagOfWords, Tokenizer):
 ##                    else:
 ##                        obj = class_()
                     obj = class_()
-                    for k, v in d.items():
+                    for k, v in list(d.items()):
                         setattr(obj, k, v)
                     return obj
                 return d
@@ -463,10 +468,6 @@ class DocumentClass(Document):
         self.docs = {}
 
     def _read(self, id_, text):
-        try:
-            text = str(text, 'utf-8')
-        except UnicodeError:
-            text = str(text, 'latin-1')
         words = self.tokenizer(text)
         bow = BagOfWords(words)
         if not id_:
